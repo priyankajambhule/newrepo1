@@ -1,0 +1,386 @@
+<?php
+$this->Paginator->options(array(
+    'update' => '#LayoutContent',
+    'evalScripts' => true,
+    'before' => $this->Js->get('#busy-indicator')->effect(
+        'fadeIn',
+        array('buffer' => false)
+    ),
+    'complete' => $this->Js->get('#busy-indicator')->effect(
+        'fadeOut',
+        array('buffer' => false)
+    ),
+));
+?>
+<!-- Page-Title -->
+<div class="row" >
+<div class="col-sm-12">
+<h4 class="page-title">Master / Group</h4>
+</div>
+</div>
+	 <div class="col-sm-12" id="messageDiv">
+	  
+	  </div>	
+<div class="row">
+<div class="col-xs-12 col-lg-12 col-xl-12">
+<div class="row">
+		<div class="col-sm-8">		
+		
+		<?php echo $this->element('flash'); ?> 		 		
+		<?php 
+		echo $this->Form->create('Group', array(
+	'url'=>array('controller'=>'accounts','action'=>'groupList','user'=>false,'ext'=>URL_EXTENSION),
+		'class' => 'form-inline search_form', 			
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('control-label'),
+		'between' => '',
+		'after' => '',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));	
+		?>	
+		<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here','label'=>false)); ?>   
+		
+		<?php
+		echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[State][Search]'));
+		?>	
+		<?php
+		echo $this->Html->link('Reset',
+		array('controller' => 'accounts','action' => 'resetGroupSearch','user'=>false,'ext'=>URL_EXTENSION),
+		array('escape'=>false,'class'=>'btn btn-info','title'=>'Reset Search'),array());			
+		?>	
+		<?php echo $this->Form->end(); 	?>		
+		</div>
+		<div class="col-sm-4 col-md-4">
+		<a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#AddGroupModal"  data-controls-modal="AddGroupModalLabel" data-backdrop="static" data-keyboard="false" >Add Group</a>
+		</div>
+		</div>
+		<div class="table-responsive">		
+		<table class="table   table-bordered table-sm master_table" id="tableToExcel" >
+		
+		<thead>
+		<tr>
+
+		
+		<th><?php echo $this->Paginator->sort('Group.name', __('Group Name'), array('escape' => FALSE)); ?></th>
+		<th><?php echo $this->Paginator->sort('Group.parent_group', __('Parent Group'), array('escape' => FALSE)); ?></th>
+		
+		<th>Action</th>
+		</tr>
+		</thead>
+		
+		<tbody id="grouplistTable">
+		<?php
+		if(!empty($groups))
+		{		
+			$i=0;
+			foreach ($groups as $row)
+			{                   
+			$i++;
+							if($i % 2==1)
+							{
+								$class='bg-tr';
+							}
+							else
+							{
+								$class='table_eventr';
+							}
+			?>
+			<tr class="<?php echo $class; ?>" id="groupRow<?php echo $row['Group']['id']; ?>">
+			<td id="groupNameTd<?php echo $row['Group']['id']; ?>"><?php echo $row['Group']['name']; ?></td>
+			<td ><span id="parentGroupIdSpan<?php echo $row['Group']['id']; ?>" style="display:none"><?php echo $row['Group']['parent_group']; ?></span><span id="parentGroupNameSpan<?php echo $row['Group']['id']; ?>"><?php echo !empty($row['Group']['parent_group'])?$row['ParentGroup']['name']:''; ?></span></td>
+			<td>
+			<?php
+			if($row['Group']['besic_group']!=BOOL_TRUE)
+			{
+			?>
+				<a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditgroupdata(<?php echo $row['Group']['id']; ?>)"><i class="fa fa-edit"></i></a>
+				<a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deletegroup(<?php echo $row['Group']['id']; ?>)"><i class="fa fa-times-circle"></i></a>
+			<?php
+			}
+			?>
+			</td>
+			
+			</tr>
+			
+			<?php 
+			}
+		}
+		else
+		{
+		?>
+		<tr id="noGroup">
+		<td colspan="2" align="center" >No Records</td>
+		</tr>
+		<?php
+		}
+		?>
+		</tbody>
+		</table>
+		
+		<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+	
+
+</div><!-- end col-->
+</div>
+
+<!---------------------------------------------Add Group------------------------------------------------------>
+<div class="modal fade" id="AddGroupModal" tabindex="-1" role="dialog" aria-labelledby="AddGroupModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Add New Group</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Group', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addgroupForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+	 
+	    <div class="row">
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Parent Group</label>	
+		<?php echo $this->Form->input('parent_group',array('type'=>'select','options'=>$groupsList,'class'=>'form-control chosen-select','empty'=>'Select Parent Group','multiple'=>false,'label'=>false)); ?>
+				
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Add Group</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+<!---------------------------------------------Edit Group------------------------------------------------------>
+<div class="modal fade" id="EditGroupModal" tabindex="-1" role="dialog" aria-labelledby="EditGroupModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Edit Group</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Group', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editgroupForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+	 
+	    <div class="row">
+		<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'editgroupId'))?>
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','id'=>'editgroupNameId','class'=>'form-control','label'=>false)); ?>	
+		<div class="col-sm-12 voffset2"></div>
+		
+		<label class="col-sm-3 control-label">Parent Group</label>	
+		<?php echo $this->Form->input('parent_group',array('type'=>'select','options'=>$groupsList,'class'=>'form-control chosen-select','empty'=>'Select Parent Group','multiple'=>false,'id'=>'editGroupParaentGroupId','label'=>false)); ?>
+				
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Update Group</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+
+
+<?php echo $this->Html->script('../plugins/fixed_table/jquery.michiweber.table-head-fixed');?>	
+<?php //echo $this->Js->writeBuffer(); ?>
+<script>
+function setEditgroupdata(id)
+{
+
+	var groupName=$('#groupNameTd'+id).html();
+	var pg_id=$('#parentGroupIdSpan'+id).html();
+
+	$('#editgroupId').val(id);
+	$('#editgroupNameId').val(groupName);
+	$('#editGroupParaentGroupId').val(pg_id);
+	
+	$('#EditGroupModal').modal('show');
+}
+
+	/*----------------------------------------------------------Group Validation---------------------------------------------*/
+		$("#addgroupForm").validate({         
+            rules: {			
+				"data[Group][name]": {
+                    required: true,                   
+                }
+				
+            },
+            messages: {
+				"data[Group][name]": {
+                    required: "Please enter name.",                   
+                }
+            }
+        });
+		$("#editgroupForm").validate({         
+            rules: {			
+				"data[Group][name]": {
+                    required: true,                   
+                }
+            },
+            messages: {
+				"data[Group][name]": {
+                    required: "Please enter name.",                   
+                }
+            }
+        });
+	
+		<!-------------------------------------------------Add Group--------------------------------------------> 
+   $("#addgroupForm").on('submit', (function(e) {
+	   //alert();
+		e.preventDefault();
+		if($('#addgroupForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'addGroup','user'=>false));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#AddGroupModal').modal('hide');}, 100);
+					document.getElementById("addgroupForm").reset();
+					$('#grouplistTable').prepend('<tr id="groupRow'+data.id+'"><td id="groupNameTd'+data.id+'">'+data.name+'</td>					<td><span id="parentGroupIdSpan'+data.id+'" style="display:none">'+data.parent_group+'</span><span id="parentGroupNameSpan'+data.id+'">'+data.pgroup_name+'</span></td><td><a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditgroupdata('+data.id+')"><i class="fa fa-edit"></i></a><a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deletegroup('+data.id+')"><i class="fa fa-times-circle"></i></a></td></tr>');
+					$('#grouplistTable #noGroup').remove();
+					
+					/*Update add Ledger select box */
+					$('#AddLedegerGruoupId').append($('<option>', {
+							value: data.id,
+							text: data.name
+							}));
+					$('#AddLedegerGruoupId').trigger("chosen:updated");
+					/*Update Edit ledger select box */
+					$('#EditLedegerGruoupId').append($('<option>', {
+							value: data.id,
+							text: data.name
+							}));
+					$('#EditLedegerGruoupId').trigger("chosen:updated");
+					
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+	<!-------------------------------------------------Edit Group--------------------------------------------> 
+   $("#editgroupForm").on('submit', (function(e) {
+		e.preventDefault();
+			if($('#editgroupForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'editGroup','user'=>false));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#EditGroupModal').modal('hide');}, 100);
+					document.getElementById("editgroupForm").reset();
+					var id=data.id;
+					$('#groupNameTd'+id).html(data.name);
+					$('#parentGroupIdSpan'+id).html(data.parent_group);
+					$('#parentGroupNameSpan'+id).html(data.pgroup_name);
+					
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+/*--------------------------------------------------------------Deletet Group--------------------------------------------*/	
+	function deletegroup(data_id){
+	var ans= confirm("Are you sure you want to delete this group ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id ;
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'deleteGroup','user'=>false));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+							$('#grouplistTable #groupRow'+data.id).remove();
+							
+						}
+					
+                   }
+             });
+        }
+}
+
+
+</script>

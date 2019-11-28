@@ -1,0 +1,383 @@
+
+	<div class="breadcrumbs">
+		<div class="col-sm-4">
+				<div class="page-title">
+					<h2>State List</h2>
+				</div>
+		</div>
+		<div class="col-sm-8">
+				<div class="page-title">
+					<ol class="breadcrumb text-right">
+						<li class="active">Master</li>
+						<li class="active">State List</li>
+					</ol>
+				</div>
+			  </div>
+	</div>
+				
+<div class="container">
+		<div class="col-sm-8">		
+			<div class="row">
+			<?php echo $this->element('flash'); ?> 		 		
+			<?php 
+			echo $this->Form->create('State', array(
+			'url'=>array('controller'=>'utilities','action'=>'statesList','admin'=>true,'ext'=>URL_EXTENSION),
+			'class' => 'search_form', 			
+			'novalidate' => true,		
+			'role' => 'form',
+			'inputDefaults' => array(
+			'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+			'div' => array('class' => 'form-group col-sm-4'),
+			'class' => array('form-control'),
+			'label' => array('control-label'),
+			'between' => '',
+			'after' => '',
+			'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+			)));	
+			?>	
+			<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here By Name','label'=>false)); ?>   
+			
+			<?php
+			echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[State][Search]'));
+			?>	
+			<?php
+			echo $this->Html->link('Reset',
+			array('controller' => 'utilities','action' => 'resetStateSearch','admin'=>true,'ext'=>URL_EXTENSION),
+			array('escape'=>false,'class'=>'btn btn-danger','title'=>'Reset Search'),array());			
+			?>	
+			<?php echo $this->Form->end(); 	?>
+				</div>
+			</div>
+			<div class="col-sm-4">
+			<a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#addStateModal"  data-controls-modal="addStateModalLabel" data-backdrop="static" data-keyboard="false" >Add State</a>
+		
+		</div>
+		
+	</div>
+	<div class="row voffset2"></div>
+		<div class="col-sm-12">		
+		<div class="table-responsive">		
+			<table class="table table-bordered master_table">
+				<thead class="thead-dark">
+					<tr>
+					<th><?php echo $this->Paginator->sort('State.name', __('Name'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Country.name', __('Country'), array('escape' => FALSE)); ?></th>	
+					<th>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody id="stateTable">
+					<?php
+					if(!empty($states))	
+					{
+						$i=($this->request->params['paging']['State']['page']-1) * $this->request->params['paging']['State']['limit']; 
+						
+						foreach ($states as $row)
+						{                   
+							$i++;
+							if($i % 2==1)
+							{
+								$class='bg-tr';
+							}
+							else
+							{
+								$class='table_eventr';
+							}
+							?>
+							<tr class="<?php echo $class; ?>" id="contryTr<?php echo $row['State']['id']; ?>">		
+								<td id="nametd<?php echo $row['State']['id']; ?>"><?php echo $row['State']['name']; ?></td>	
+								<td >
+									<span id="countryidtd<?php echo $row['State']['id']; ?>" style="display:none"><?php echo $row['State']['country_id']; ?></span>
+									<span id="countrynametd<?php echo $row['State']['id']; ?>"><?php echo $row['Country']['name']; ?></span>
+								</td>	
+								
+								<td><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteState(<?php echo $row['State']['id']; ?>)"><i class="fa fa-times-circle" tabindex="3"></i></a>
+									<a href="javascript:void()" class="btn btn-info btn-xs" onclick="editState(<?php echo $row['State']['id']; ?>)"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								</td>	
+							</tr>	
+							<?php
+						}
+					}
+					else
+					{ 
+					?>
+					<tr>
+					<td colspan="3" align="center">No Records</td>
+					</tr>
+					<?php
+					}
+					?>
+				</tbody>
+			</table>
+			
+			<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+<!------------------------------------Add State----------------------------------------->
+<div class="modal fade" id="addStateModal" tabindex="-1" role="dialog" aria-labelledby="addStateModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('State', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addStateForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Add State</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row">
+			
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<label>Name <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'Name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<label>Country <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('country_id',array('type'=>'select','options'=>$countryList,'empty'=>'Select Country','class'=>'form-control','label'=>false)); ?>
+			</div>
+				<div class="col-sm-12 voffset2"></div>
+			
+			
+		
+		</div>
+		</div>
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-danger pull-right">Add</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ <!------------------------------------Edit State----------------------------------------->
+<div class="modal fade" id="EditStateModal" tabindex="-1" role="dialog" aria-labelledby="EditStateModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('State', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editStateForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Edit State</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row">
+			
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'EditStateId')) ?>
+			<label>Name <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'Name','id'=>'EditStateName','class'=>'form-control','label'=>false)); ?>
+			</div>
+				<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<label>Country <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('country_id',array('type'=>'select','id'=>'editCountryID','options'=>$countryList,'empty'=>'Select Country','class'=>'form-control','label'=>false)); ?>
+			</div>
+				<div class="col-sm-12 voffset2"></div>
+
+	
+
+		</div>
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-danger pull-right">Update</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ <script type="text/javascript">
+
+<!-----------------------------add State validation--------------------------->	
+		$("#addStateForm").validate({
+		          
+            rules: {			
+				"data[State][name]": {
+                    required: true,                   
+                },
+				"data[State][country_id]": {
+                    required: true,                   
+                }				
+				
+            },
+            messages: {
+				"data[State][name]": {
+                    required: "Please enter State name",                   
+                },
+				"data[State][country_id]": {
+                    required: "Please select country",                   
+                }					
+		    }
+        });
+		
+		<!-----------------------------Edit State validation--------------------------->	
+		$("#editStateForm").validate({
+		          
+            rules: {			
+				"data[State][name]": {
+                    required: true,                   
+                },
+				"data[State][country_id]": {
+                    required: true,                   
+                }						
+				
+            },
+            messages: {
+				"data[State][name]": {
+                    required: "Please enter State name",                   
+                },
+				"data[State][country_id]": {
+                    required: "Please select country",                   
+                }				
+		    }
+        });
+		
+		
+ /*------------------------------------------------Add State--------------------------------------------*/
+   $("#addStateForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#addStateForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'addState','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#addStateModal').modal('hide');}, 100);
+					document.getElementById("addStateForm").reset();
+					
+					
+					$('#stateTable').prepend('<tr class="table_eventr" id="contryTr'+data.id+'"><td id="nametd'+data.id+'">'+data.name+'</td><td><span id="countryidtd'+data.id+'" style="display:none">'+data.c_id+'</span><span id="countrynametd'+data.id+'">'+data.country+'</span></td><td><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteState('+data.id+')"><i class="fa fa-times-circle" tabindex="3"></i></a><a href="javascript:void()" class="btn btn-info btn-xs" onclick="editState('+data.id+')"><i class="fa fa-pencil" aria-hidden="true"></i></a></td></tr>');
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+	/*------------------------------------------------------Set date for edit State-------------------------------------*/
+	function editState(id)
+	{
+		$('#EditStateId').val(id);
+		var name=$('#nametd'+id).html();
+		var country=$('#countryidtd'+id).html();
+		$('#EditStateName').val(name);
+		$('#editCountryID').val(country);
+	
+		$('#EditStateModal').modal('show');
+	}
+	
+	/*------------------------------------------------Edit State--------------------------------------------*/
+   $("#editStateForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#editStateForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'editState','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#EditStateModal').modal('hide');}, 100);
+					document.getElementById("editStateForm").reset();
+					
+					$('#nametd'+data.id).html(data.name);
+					$('#countryidtd'+data.id).html(data.c_id);
+					$('#countrynametd'+data.id).html(data.country);
+					
+						
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+	<!------------------------------------------------------ Delete State ------------------------------------------->
+function deleteState(data_id){
+	//alert();
+	var ans= confirm("Are you sure you want to delete this State ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id+'&model=State';
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'deleteByModalOrId','admin'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> State deleted successfully.</div>');
+							$('#stateTable #contryTr'+data.id).remove();
+							
+						}else{
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> State counld not be deleted .</div>');
+							
+						}
+					
+                   }
+             });
+        }
+}	
+	</script>
+	
+	</div>
+</div>

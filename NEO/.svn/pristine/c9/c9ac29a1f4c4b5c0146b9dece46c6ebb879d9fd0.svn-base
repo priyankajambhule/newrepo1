@@ -1,0 +1,113 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                <div class="page-header float-left">
+                    <div class="page-title">
+                        <h4>Add Packaging</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="page-header float-right">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">Packaging</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+				
+<div class="col-sm-12">
+   <div id="msgout">
+    <?php
+    echo $this->element('flash');
+   
+    ?>
+	</div>
+    
+	<div class="col-sm-1"></div>
+	<div class="col-sm-10 rfqForm">
+	
+    <?php echo $this->Form->create('Packagine', array('id'=>'addPackagingform','novalidate' => true, 'type' => 'file')); ?>
+    <div class="form-group">
+        <div class="col-sm-12">
+            <?php echo $this->Form->input('packing_type', array('type'=>'text','label' => 'Packaging Type', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 
+	<div class="col-sm-12 voffset2"></div>
+	 
+	<div class="row">
+  <div class="col-sm-12">
+ 	<!--<label>Diamension</label>-->
+  <div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+
+        <div class="col-sm-4 ">
+            <?php echo $this->Form->input('length', array('type'=>'text','label' => 'Length', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+        
+
+    <div class="form-group">
+        <div class="col-sm-4 ">
+             <?php echo $this->Form->input('width', array('type'=>'text','label' => 'Width', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+            
+        </div>
+    </div>  
+
+    <div class="form-group">
+        <div class="col-sm-4 ">
+            <?php echo $this->Form->input('depth', array('type'=>'text','label' => 'Depth', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+    </div>    
+    </div>    
+	<div class="col-sm-12 voffset2"></div>
+   <!-- <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php //echo $this->Form->input('packaging_name', array('type'=>'text','label' => 'Packaging Name', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  -->
+	 
+		<div class="col-sm-12 voffset2"></div>
+	  
+	
+<div>
+<div class="col-sm-12 inputDivision">
+        <input type="submit" value="Add" class="btn btn-success">
+        <button type="button" onclick="window.location ='addPackagine'" class="btn btn-primary">Cancel</button> 
+    </div>   
+    <?php echo $this->Form->end(); ?>    
+</div>   
+
+</div>
+</div>
+<script>
+$("#addPackagingform").validate({  
+		          
+            rules: {			
+				
+                "data[Packagine][packing_type]": {
+                    required: true,                   
+                },
+				
+				
+				
+            },
+            messages: {
+			
+                "data[Rfq][packing_type]": {
+                    required: "Please enter packaging type.",
+                },
+				
+							
+            }
+        });
+    $('#msgout').fadeOut(2000, function () 
+					{
+                      $('#msgout').text('');
+					});
+			
+ 
+</script>

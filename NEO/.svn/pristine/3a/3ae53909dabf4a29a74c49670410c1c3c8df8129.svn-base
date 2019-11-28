@@ -1,0 +1,582 @@
+<?php
+
+App::uses('AppController', 'Controller');
+App::uses('CakeEmail', 'Network/Email');
+
+class CompanyadminsController extends AppController {
+
+    /**
+     * Helpers and Components
+     * @var array
+    **/
+	
+	/*
+	 Mrunali D
+	15.10.2018
+	*/
+	 //function for admin logout
+	 
+	public $components = array('Paginator');	
+    public function compadmin_logout() {
+		
+        if ($this->Auth->user('id')) {
+            $this->loadModel('User');
+            $this->User->id = $this->Auth->user('id');
+            if ($this->User->saveField('is_logged_in', 0)) {
+                $this->Session->destroy('Auth.User');
+                $this->redirect($this->Auth->logout());
+            }
+        } else {
+            $this->redirect($this->Auth->logout());
+        }
+    }
+	
+	 /*
+	 Mrunali D
+	17.10.2018
+	*/
+	 public function compadmin_changePassword() 
+	{
+	    $this->layout = 'compadmin/inner';
+		$this->loadModel('Role');
+		$this->loadModel('User');
+		$user_id=$this->Session->read('Auth.User.id');
+
+	
+		if(!empty($this->data))
+		{
+
+		$old = $this->data['User']['old_password'];
+		$old_password = $this->Auth->password($old);
+		//print_r($old_password); old pwd encrypted
+		//exit;
+	    $check_password = $this->User->find('first',array('conditions'=>array('User.id'=>$user_id,'User.password'=>$old_password),'fields'=>array('User.password')));
+			
+
+		if(!empty($check_password))
+		{
+		
+			  $new = $this->data['User']['new_password'];			   
+			  $re_type_new = $this->data['User']['confirm_password'];
+			
+			  if(!empty($new) && !empty($re_type_new))
+			  {
+				  if($new == $re_type_new)
+				  {
+
+					  $this->request->data['User']['password']= $new;
+					  $this->User->id = $user_id;
+				 
+					  if($this->User->save($this->data))
+					  {
+
+						$password_change_successfully = __('Password changed successfully',true);
+						$this->Session->setFlash(__($password_change_successfully, true),'success');
+						$this->redirect($this->referer());
+					  }
+
+				  }
+
+			 }
+
+		 }
+		 else
+		 {
+			$sorry_your_old_password_is_incorrect = __('Sorry your old password is incorrect',true);
+			$this->Session->setFlash(__($sorry_your_old_password_is_incorrect, true),'error');
+		 }
+		}
+
+		}
+	
+/*
+  Mrunali D 
+  15.10.2018 
+  comapany admin dashboard
+*/	
+   public function compadmin_dashboard()
+   {
+	    $this->layout = 'compadmin/inner';
+	   $this->compadmin_check_login();
+	   if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{
+			
+		}
+   }
+  /*
+   Mrunali D 
+   15.10.2018 
+   add RFQ 
+  */
+ 	 public function compadmin_addRfq()
+	 {
+		  $this->layout = 'compadmin/inner';
+		  $this->loadModel('Ledger');
+		  $this->loadModel('Packagine');
+		  $this->loadModel('MfgLocation');
+		  $this->loadModel('Rfq');
+		 $this->compadmin_check_login();
+		 $customerList=$this->Ledger->getLedgerList();
+		 $this->Set(compact('customerList'));
+		 $packing_type=$this->Packagine->getPackagineList();
+		 $this->Set(compact('packing_type'));
+		  $mfgList=$this->MfgLocation->getMfgLocationList();
+		 $this->Set(compact('mfgList'));
+		 if ($this->request->is('post')) 
+		{
+				//echo "<pre>";print_r($this->request->data);exit;
+				$project_name=$this->request->data['Rfq']['project'];
+		  $this->Rfq->create();
+		  if(!empty($this->request->data['Rfq']['images']['name']))
+				{				
+					$message="";		
+					$this->Img = $this->Components->load('Img');			
+					$newName = strtotime("now");
+					$rnd = rand(5, 15);
+					$newName = $newName.$rnd;
+					$ext = $this->Img->ext($this->request->data['Rfq']['images']['name']);			
+					
+					$origFile = $newName . '.' . $ext;
+					$dst = $newName .  '.'.$ext;	
+					$targetdir = WWW_ROOT . 'images/rfqImages';			
+					
+					$upload = $this->Img->upload($this->request->data['Rfq']['images']['tmp_name'], $targetdir, $origFile);
+						
+						if($upload == 'Success') 
+						{	
+								$this->Img->resampleGD($targetdir . DS . $origFile, WWW_ROOT . 'images/rfqImages/'.$project_name.'/', $dst, 300, 300, 1, 0);
+								$this->request->data['Rfq']['images'] = $dst;
+						}
+						else 
+						{
+							$this->request->data['Rfq']['images'] = '';
+							$message="Image format not supported";
+						}
+					
+							
+					
+				}
+		   if($this->Rfq->save($this->request->data['Rfq']))
+		   {
+			   $this->Session->setFlash(__('ADD RFQ SUCCESSFULLY'),'default',array('class'=>'alert alert-success'));				
+				return $this->redirect(array('action' => 'addRfq'));
+			   
+		   }
+		}
+		
+	 }
+	
+	/*
+   Rupa
+   16.10.2018 
+   add Customer
+  */
+ 	public function compadmin_addCustomer()
+	{
+		  $this->layout = 'compadmin/inner';
+		  $this->loadModel('Ledger');	
+		  $this->loadModel('PartyDetail');	
+		  $this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		if ($this->request->is('ajax')) 
+			{
+				//print_r($this->request->data);
+				
+			
+				if (!empty($this->request->data)) {
+					$this->Ledger->create();
+					$this->request->data['Ledger']['name']=ucfirst(strtolower($this->request->data['Customer']['name']));
+					$this->request->data['Ledger']['company_name']=ucfirst(strtolower($this->request->data['Customer']['company_name']));
+						
+					if ($this->Ledger->save($this->request->data['Ledger'])) 
+					{
+						  
+							$id=$this->Ledger->getInsertID();
+							$name=$this->request->data['Ledger']['name'];
+							$comp_name=$this->request->data['Ledger']['company_name'];
+							$this->PartyDetail->create();	
+							
+							$this->request->data['PartyDetail']['ledger_id']=$id;
+							
+							$this->request->data['PartyDetail']['mobile']=$this->request->data['Customer']['mobile'];
+							$mobile=$this->request->data['PartyDetail']['mobile'];
+							$this->request->data['PartyDetail']['address']=ucfirst(strtolower($this->request->data['Customer']['address']));
+							$address=$this->request->data['PartyDetail']['address'];
+							$this->request->data['PartyDetail']['email']=$this->request->data['Customer']['email'];
+							$email=$this->request->data['PartyDetail']['email'];
+							//$this->request->data['PartyDetail']['contact_person']=$this->request->data['Customer']['contact_person'];
+							$this->request->data['PartyDetail']['country_id']=$this->request->data['Customer']['country_id'];
+							$this->request->data['PartyDetail']['state_id']=$this->request->data['Customer']['state_id'];
+							$this->request->data['PartyDetail']['city_id']=$this->request->data['Customer']['city_id'];
+							$this->request->data['PartyDetail']['pin_code']=$this->request->data['Customer']['pin_code'];
+							
+							$this->PartyDetail->save($this->request->data['PartyDetail']);
+					}		
+					echo json_encode(array('status'=>'200','message'=>'Customer added successfully','id'=>$id,'comp_name'=>$comp_name,'name'=>$name,'mobile'=>$mobile,'address'=>$address,'email'=>$email));
+				}
+				else {
+					echo json_encode(array('status'=>'401','message'=>'Customer could not be added'));
+				}
+			}else
+			{
+				$this->Session->setFlash("Unauthorized access", 'error');
+				$this->redirect($this->referer());
+			}
+				
+	}		
+/*
+ Mrunali D 
+ 22.10.2018
+ add customers using modal
+*/	
+    public function compadmin_addCustModal()
+	{
+		//$this->layout = 'compadmin/inner';
+		  $this->loadModel('Ledger');	
+		  $this->loadModel('PartyDetail');	
+		  $this->autoRender = FALSE;
+		    $this->layout = 'ajax';
+		if ($this->request->is('ajax')) 
+		{
+			      $this->Ledger->create();
+					$this->request->data['Ledger']['name']=ucfirst(strtolower($this->request->data['Customer']['name']));
+					$this->request->data['Ledger']['company_name']=ucfirst(strtolower($this->request->data['Customer']['company_name']));
+						
+					if ($this->Ledger->save($this->request->data['Ledger'])) 
+					{
+						  
+							$id=$this->Ledger->getInsertID();
+							$name=$this->request->data['Ledger']['name'];
+							$comp_name=$this->request->data['Ledger']['company_name'];
+							$this->PartyDetail->create();	
+							$this->request->data['PartyDetail']['ledger_id']=$id;
+							$this->request->data['PartyDetail']['mobile']=$this->request->data['Customer']['mobile'];
+							
+						if($this->PartyDetail->save($this->request->data['PartyDetail']))
+						{
+							echo json_encode(array('status'=>'200','message'=>'Customer added successfully','id'=>$id,'comp_name'=>$comp_name,'name'=>$name,));
+						}
+		            }
+		
+	    }
+	}
+
+	 /*
+	Rupa
+	  16.10.2018 
+	  for show customer list 
+	*/
+	public function compadmin_customerList()
+	{ 
+		$this->layout = 'compadmin/inner';
+		$this->loadModel('Ledger');	
+		$this->loadModel('PartyDetail');	
+		$this->loadModel('Country');	
+		$this->loadModel('State');	
+		$this->loadModel('City');	
+		$countryList=$this->Country->getCountryList();
+		$this->Set(compact('countryList'));
+		
+		$getStates=$this->State->getStateList();
+		$this->Set(compact('getStates'));
+
+		$getCities=$this->City->getCityList();
+		$this->Set(compact('getCities'));
+		$cond=array();
+		
+		if(isset($this->request->data['Ledger']))
+		{		
+			$this->Session->write('LedgerSearch',$this->request->data['Ledger']);
+		}
+		else
+		{	
+			$this->request->data['Ledger']=$this->Session->read('LedgerSearch');
+		}		
+		if(isset($this->request->data['Ledger']))				
+		{		
+			//print_r($this->request->data['Ledger']);
+			if(isset($this->request->data['Ledger']['name']) and !empty($this->request->data['Ledger']['name']))				
+			{
+				$cond['Ledger.name LIKE']="%".$this->request->data['Ledger']['name']."%";
+			}				
+		}	
+						
+		$conditions = array(
+			'Ledger.id !=' => BOOL_FALSE,
+			'Ledger.is_deleted' => BOOL_FALSE,
+			'Ledger.is_active' => BOOL_TRUE
+		);
+	
+		$conditions=array_merge($conditions,$cond);
+		$this->Paginator->settings = array(
+			'Ledger' => array(
+				'conditions' => $conditions,
+				'contain'=>array('PartyDetail'=>array('id','address','mobile','email','contact_person','Country'=>array('name','State'=>array('name','City'=>array('name'))))),
+				'order' => array('Ledger.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => 2
+		));
+		
+		$Customer = $this->Paginator->paginate('Ledger');
+		$this->Set(compact('Customer'));
+	//echo "<pre>";print_r($Customer);exit;
+
+	}
+	/*
+	Rupa
+	17.10.18
+	Reset Publisher Search
+	*/
+	
+	public function compadmin_resetCustomerSearch() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		$this->layout = 'compadmin/inner';
+			
+			$this->Session->delete('LedgerSearch');
+			$this->redirect($this->referer());
+    }
+	 /*
+	Rupa
+	  16.10.2018 
+	Customer set data
+	*/
+	public function compadmin_getDataByCustomer(){
+		
+		$this->autoRender = FALSE;
+		$this->layout = 'compadmin/inner';
+		$this->loadModel('Ledger');	
+		$this->loadModel('PartyDetail');	
+		$this->loadModel('Country');	
+		$this->loadModel('State');	
+		$this->loadModel('City');	
+		 $id=$this->request->data['id'];
+		
+		$cond=array();	
+		if ($this->request->is('ajax')) 
+		{	
+			if(!empty($id))
+			{
+				$customerData=$this->Ledger->find('first',array('conditions'=>array('Ledger.id'=>$id,'Ledger.is_deleted'=>BOOL_FALSE,'Ledger.is_active'=>BOOL_TRUE),'contain'=>array('PartyDetail'=>array('id','address','mobile','email','contact_person','Country'=>array('name','State'=>array('name','City'=>array('name'))))),'recursive'=>2));
+				$name= $customerData['Ledger']['name'];
+				$comp_name=$customerData['Ledger']['company_name'];
+				$address=$customerData['PartyDetail']['address'];
+				$mobile=$customerData['PartyDetail']['mobile'];
+				$email=$customerData['PartyDetail']['email'];
+				$contact_person=$customerData['PartyDetail']['contact_person'];
+				$pin_code=$customerData['PartyDetail']['pin_code'];
+				$country=$customerData['PartyDetail']['country_id'];
+				$state=$customerData['PartyDetail']['state_id'];
+				$city=$customerData['PartyDetail']['city_id'];
+					echo json_encode(array('status'=>'200','id'=>$id,'name'=>$name,'comp_name'=>$comp_name,'address'=>$address,'mobile'=>$mobile,'email'=>$email,'contact_person'=>$contact_person,'country'=>$country,'pin_code'=>$pin_code,'state'=>$state,'city'=>$city));				
+			}else{
+			echo json_encode(array('status'=>'401'));		
+			}			
+		}
+	}
+	 /*
+	Rupa
+	  16.10.2018 
+	Customer set data
+	*/
+	public function compadmin_editCustomer(){
+		
+		$this->autoRender = FALSE;
+		$this->layout = 'compadmin/inner';
+		$this->loadModel('Ledger');	
+		$this->loadModel('PartyDetail');	
+		
+		if ($this->request->is('ajax')) 
+		{	
+			//print_r($this->request->data);
+			$id=($this->request->data['Customer']['id']);
+			$name=ucfirst(strtolower($this->request->data['Customer']['name']));
+			$company_name = ucfirst(strtolower($this->request->data['Customer']['company_name']));
+		   	$mobile=$this->request->data['Customer']['mobile'];
+			$address=ucfirst(strtolower($this->request->data['Customer']['address']));
+			$email=$this->request->data['Customer']['email'];
+			$country=$this->request->data['Customer']['country_id'];
+			$state=$this->request->data['Customer']['state_id'];
+			$city=$this->request->data['Customer']['city_id'];
+			$pin_code=$this->request->data['Customer']['pin_code'];
+		   	if(!empty($id))
+			{
+					//$this->Ledger->create();
+					$this->request->data['Ledger']['id'] = $id;
+					$this->request->data['Ledger']['name']=$name;
+					$this->request->data['Ledger']['company_name']=$company_name;
+					$compant_name=ucfirst(strtolower($this->request->data['Customer']['company_name']));
+						
+					if ($this->Ledger->save($this->request->data)) 
+					{
+						$PartyDetailIdata=$this->PartyDetail->find('first',array('conditions'=>array('PartyDetail.ledger_id'=>$id),'recursive'=>1));
+						$p_id=$PartyDetailIdata['PartyDetail']['id'];
+						
+						//$id=$this->Ledger->getInsertID();						
+						$this->request->data['PartyDetail']['id'] = $p_id;
+						$this->request->data['PartyDetail']['mobile']=$mobile;
+						$this->request->data['PartyDetail']['address']=$address;
+						$this->request->data['PartyDetail']['email']=$email;					
+						$this->request->data['PartyDetail']['country_id']=$country;
+						$this->request->data['PartyDetail']['state_id']=$state;
+						$this->request->data['PartyDetail']['city_id']=$city;
+						$this->request->data['PartyDetail']['pin_code']=$pin_code;
+						if($this->PartyDetail->save($this->request->data)){
+							echo json_encode(array('status'=>'200','message'=>'Customer update successfully','id'=>$id,'name'=>$name,'company_name'=>$company_name,'mobile'=>$mobile,'address'=>$address,'email'=>$email));
+						}
+					}
+					
+			}	 
+			else 
+			{
+				echo json_encode(array('status'=>'401','message'=>'Customer could not be upded'));
+			}
+			
+		}
+	}
+	 /*
+	Rupa
+	  17.10.2018 
+	Customer delete data
+	*/
+	public function compadmin_deleteCustomer() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = 'compadmin/inner';
+		$this->loadModel('Ledger');	
+		$this->loadModel('PartyDetail');
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$this->Ledger->id =$id;
+				if (!$this->Ledger->exists()) 
+				{
+					throw new NotFoundException('Invalid Customer');
+				}
+					   if ($this->Ledger->saveField('is_deleted',BOOL_TRUE)) 
+					   {
+							$this->Ledger->saveField('is_active',BOOL_FALSE);
+						echo json_encode(array('status'=>'200','id'=>$id,'message'=>'Customer Deleted successfully'));
+					   }else
+					   {
+						   echo json_encode(array('status'=>'401','message'=>'Customer could not be Deleted'));
+					   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	 /*
+	  Mrunali D 
+	  16.10.2018 
+	  for add packaging 
+	 */
+	 public function compadmin_addPackagine()
+	 {
+		 $this->layout = 'compadmin/inner';
+		  $this->loadModel('Packagine');
+		  $this->compadmin_check_login();
+		 if($this->request->is('post')) 
+		 {
+           $this->Packagine->create();
+		   if($this->Packagine->save($this->request->data['Packagine']))
+		   {
+			   $this->Session->setFlash(__('ADD PACKAGING SUCCESSFULLY'),'default',array('class'=>'alert alert-success'));				
+				return $this->redirect(array('action' => 'addPackagine'));
+			   
+		   }
+     	 }
+	 }
+     /*
+	  Mrunali D 
+	  16.10.2018 
+	  for add mfg 
+	 */
+	 public function compadmin_addMfg()
+	 {
+		 $this->layout = 'compadmin/inner';
+		  $this->loadModel('MfgLocation');
+		  $this->loadModel('Ledger');
+		  $this->compadmin_check_login();
+		  $customerList=$this->Ledger->getLedgerList();
+		 $this->Set(compact('customerList'));
+		 if($this->request->is('post')) 
+		 {
+			  $this->MfgLocation->create();
+		   if($this->MfgLocation->save($this->request->data['MfgLocation']))
+		   {
+			   $this->Session->setFlash(__('ADD MFG LOCATION SUCCESSFULLY'),'default',array('class'=>'alert alert-success'));				
+				return $this->redirect(array('action' => 'addMfg'));
+			   
+		   }
+		 }
+		 
+	 }
+	 /*
+	  Mrunali D 
+	  16.10.2018 
+	  for add mfg 
+	 */
+	 public function compadmin_addMfgLocation()
+	 {
+		 $this->layout = 'compadmin/inner';
+		  $this->loadModel('MfgLocation');
+		  $this->loadModel('Ledger');
+		 $this->autoRender = FALSE;
+		 
+
+		 if($this->request->is('ajax')) 
+		 {
+			  $this->MfgLocation->create();
+		   if($this->MfgLocation->save($this->request->data['MfgLocation']))
+		   {
+			   
+			   $id=$this->MfgLocation->getInsertID();
+			   $name=$this->request->data['MfgLocation']['area'];
+			  
+			   echo json_encode(array('status'=>'200','id'=>$id,'name'=>$name,'message'=>'MFG Location added successfully'));
+			   
+		   }
+		 }
+		 
+	 }
+	 public function compadmin_getArea() {
+	
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+        if ($this->request->is('ajax')) 
+		{		
+			$this->loadModel('MfgLocation');
+			$states = array();
+			
+			
+			if (isset($this->request['data']['id'])) 
+			{
+				$states = $this->MfgLocation->find('list', array(
+					'fields' => array('id','area'),
+					'conditions' => array(
+					'MfgLocation.customer_id' => $this->request['data']['id'],
+					'MfgLocation.is_deleted' => BOOL_FALSE,
+					'MfgLocation.is_active' => BOOL_TRUE,					
+					),
+					'order'=>array('MfgLocation.area'=>'ASC')
+				));
+				
+				$str='<option value="">Select Mfg Location</option>';
+				foreach($states as $k=>$v)
+				{
+						
+					$str.='<option value="'.$k.'">'.$v.'</option>';
+				}
+				header('Content-Type: application/json');
+				echo json_encode(array('data'=>$str));
+				exit();
+			}			
+		}			
+	}
+}

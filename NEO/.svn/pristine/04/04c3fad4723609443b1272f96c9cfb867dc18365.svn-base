@@ -1,0 +1,591 @@
+<?php
+App::uses('AppController', 'Controller');
+class UtilitiesController extends AppController {
+
+	public $components = array('Paginator');
+    public function beforeFilter()
+	{
+        parent::beforeFilter();
+        $authAllowedActions = array();
+		
+        $this->Auth->allow($authAllowedActions);
+        /* if (!in_array($this->Auth->user('role_id'), array(ADMIN_ROLE_ID,CO_ADMIN_ROLE_ID))) 
+		{
+            $this->Auth->logout();
+        } */
+
+        //set layout based on user session
+         if (in_array($this->Auth->user('role_id'), array(ADMIN_ROLE_ID))) 
+		{
+            $this->layout = 'admin/inner';
+        }else{
+           $this->layout = 'admin/inner';
+        } 
+    }
+	
+	/*
+	Amit Sahu
+	Country List
+	28.06.17
+	*/
+    public function admin_countryList() 
+	{	
+		
+		$cond=array();
+		$this->admin_check_login();
+		$this->loadModel('Country');
+		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{	
+			if(isset($this->request->data['Country']))
+			{					
+				$this->Session->write('CountrySearch',$this->request->data['Country']);
+			}
+			else
+			{	
+				$this->request->data['Country']=$this->Session->read('CountrySearch');		
+			}
+			if(isset($this->request->data['Country']))				
+			{			
+				if(isset($this->request->data['Country']['name']) and !empty($this->request->data['Country']['name']))				
+				{
+					$cond['Country.name LIKE']="%".$this->request->data['Country']['name']."%";
+				}				
+			}
+			
+			$conditions = array(
+			'Country.id !=' => BOOL_FALSE,
+			'Country.is_deleted' => BOOL_FALSE
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'Country' => array(
+				'conditions' => $conditions,
+				'order' => array('Country.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => -1
+		));
+		$countries = $this->Paginator->paginate('Country');
+		$this->set(compact('countries'));		
+		
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}	
+					
+		
+		
+    }
+	/*
+	Amit Sahu
+	26.06.17
+	Add Country
+	*/
+	public function admin_addCountry()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('Country');
+		
+		if ($this->request->is('ajax')) 
+			{
+			
+				$this->Country->create();			
+				if ($this->Country->save($this->request->data['Country'])) 
+				{
+					
+						$id=$this->Country->getInsertID();
+						$name=$this->request->data['Country']['name'];
+						
+					
+						
+					echo json_encode(array('status'=>'1000','message'=>'Country added successfully', 'id'=>$id,'name'=>$name));
+				} 
+				else 
+				{
+					echo json_encode(array('status'=>'1001','message'=>'Country could not be added'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	/*
+	Edit Country
+	Amit Sahu
+	28.06.17
+	*/
+	public function admin_editCountry()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('Country');
+		
+		$this->admin_check_login();				
+		
+		if ($this->request->is('ajax')) 
+			{
+				//print_r($this->request->data);
+				$id=$this->request->data['Country']['id'];
+				if(!empty($id))
+					{
+						
+						if ($this->Country->save($this->request->data['Country'])) 
+						{
+							$name=$this->request->data['Country']['name'];
+							echo json_encode(array('status'=>'1000','message'=>'Country edit successfully','id'=>$id,'name'=>$name));
+						} 
+						else 
+						{
+							echo json_encode(array('status'=>'1001','message'=>'Country could not be edit'));
+						}
+					}
+			}
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	/*
+	Amit Sahu
+	Delete Country/State/District
+	28.06.17
+	*/
+	public function admin_deleteByModalOrId() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+		$this->admin_check_login();		
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$model= $this->request->data['model'];
+				$this->loadModel($model);
+				$this->$model->id =$id;
+				if (!$this->$model->exists()) 
+				{
+					throw new NotFoundException('Invalid '.$model);
+				}
+									
+							   if ($this->$model->saveField('is_deleted',BOOL_TRUE)) 
+							   {
+									$this->$model->saveField('is_active',BOOL_FALSE);
+								echo json_encode(array('status'=>'1000','id'=>$id));
+							   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+	Amit Sahu
+	Reset Country Search
+	28.06.17
+	*/
+	public function admin_resetCountrySearch() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		$this->admin_check_login();		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{			
+			$this->Session->delete('CountrySearch');
+			$this->redirect($this->referer());	
+			
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}		
+		
+    }
+	/*
+	Amit Sahu
+	State List
+	28.06.17
+	*/
+    public function admin_statesList() 
+	{	
+		
+		$cond=array();
+		$this->admin_check_login();
+		$this->loadModel('State');
+		$this->loadModel('Country');
+		
+		
+		$countryList=$this->Country->getCountryList();
+		$this->Set(compact('countryList'));
+		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{	
+			if(isset($this->request->data['State']))
+			{					
+				$this->Session->write('StateSearch',$this->request->data['State']);
+			}
+			else
+			{	
+				$this->request->data['State']=$this->Session->read('StateSearch');		
+			}
+			if(isset($this->request->data['State']))				
+			{			
+				if(isset($this->request->data['State']['name']) and !empty($this->request->data['State']['name']))				
+				{
+					$cond['State.name LIKE']="%".$this->request->data['State']['name']."%";
+				}
+				if(isset($this->request->data['State']['country_id']) and !empty($this->request->data['State']['country_id']))				
+				{
+					$cond['State.country_id']=$this->request->data['State']['country_id'];
+				}				
+			}
+			
+			$conditions = array(
+			'State.id !=' => BOOL_FALSE,
+			'State.is_deleted' => BOOL_FALSE
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'State' => array(
+				'conditions' => $conditions,
+				'order' => array('State.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => 1
+		));
+		$states = $this->Paginator->paginate('State');
+		$this->set(compact('states'));		
+		
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}	
+					
+		
+		
+    }
+	/*
+	Amit Sahu
+	26.06.17
+	Add State
+	*/
+	public function admin_addState()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('State');
+		$this->loadModel('Country');
+		
+		
+		
+		if ($this->request->is('ajax')) 
+			{
+				
+				
+				$this->State->create();			
+				if ($this->State->save($this->request->data['State'])) 
+				{
+					
+						$id=$this->State->getInsertID();
+						$name=$this->request->data['State']['name'];
+						$c_id=$this->request->data['State']['country_id'];
+						$cdata=$this->Country->findByid($c_id);
+						$country='';
+						if(!empty($cdata))
+						{
+							$country=$cdata['Country']['name'];
+						}
+						
+						
+					
+						
+					echo json_encode(array('status'=>'1000','message'=>'State added successfully', 'id'=>$id,'name'=>$name,'country'=>$country,'c_id'=>$c_id));
+				} 
+				else 
+				{
+					echo json_encode(array('status'=>'1001','message'=>'Country could not be added'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	/*
+	Edit Country
+	Amit Sahu
+	28.06.17
+	*/
+	public function admin_editState()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('State');
+		$this->loadModel('Country');
+		
+		$this->admin_check_login();				
+		
+		if ($this->request->is('ajax')) 
+			{
+				//print_r($this->request->data);
+				$id=$this->request->data['State']['id'];
+				if(!empty($id))
+					{
+						
+						
+						if ($this->State->save($this->request->data['State'])) 
+						{
+							$country="";
+							$c_id=$this->request->data['State']['country_id'];						
+							$name=$this->request->data['State']['name'];						
+							$cdata=$this->Country->findByid($c_id);
+								
+								if(!empty($cdata))
+								{
+									$country=$cdata['Country']['name'];
+								}
+							
+							
+							echo json_encode(array('status'=>'1000','message'=>'State edit successfully','id'=>$id,'country'=>$country,'name'=>$name,'c_id'=>$c_id));
+						} 
+						else 
+						{
+							echo json_encode(array('status'=>'1001','message'=>'State could not be edit'));
+						}
+					}
+			}
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+		/*
+	Amit Sahu
+	Reset State Search
+	28.06.17
+	*/
+	public function admin_resetStateSearch() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		$this->admin_check_login();		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{			
+			$this->Session->delete('StateSearch');
+			$this->redirect($this->referer());	
+			
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}		
+		
+    }
+	/*
+	  4-7-2017
+	  Amit SAhu
+	  District List
+	*/
+	public function admin_cityList() 
+	{	
+		
+		$cond=array();
+		$this->admin_check_login();
+		$this->loadModel('State');
+		$this->loadModel('Country');
+		$this->loadModel('City');
+		
+		$stateList=$this->State->getStateList();
+		$this->Set(compact('stateList'));
+		
+		$countryList=$this->Country->getCountryList();
+		$this->Set(compact('countryList'));
+		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{	
+			if(isset($this->request->data['City']))
+			{					
+				$this->Session->write('CitySearch',$this->request->data['City']);
+			}
+			else
+			{	
+				$this->request->data['City']=$this->Session->read('CitySearch');		
+			}
+			if(isset($this->request->data['City']))				
+			{			
+				if(isset($this->request->data['City']['name']) and !empty($this->request->data['City']['name']))				
+				{
+					$cond['City.name LIKE']="%".$this->request->data['City']['name']."%";
+				}
+				if(isset($this->request->data['City']['state_id']) and !empty($this->request->data['City']['state_id']))				
+				{
+					$cond['City.state_id']=$this->request->data['City']['state_id'];
+				}				
+			}
+			
+			$conditions = array(
+			'City.id !=' => BOOL_FALSE,
+			'City.is_deleted' => BOOL_FALSE,
+			'City.is_active' => BOOL_TRUE,
+			
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'City' => array(
+				'conditions' => $conditions,
+				'order' => array('City.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => 1
+		));
+		$cities = $this->Paginator->paginate('City');
+		$this->set(compact('cities'));		
+		
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}	
+		
+    }
+	/*
+	Amit Shau
+	24.020.18
+	Add City 
+	*/
+	public function admin_addCity()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('State');
+		$this->loadModel('City');
+		if ($this->request->is('ajax')) 
+			{
+				$this->City->create();			
+				if ($this->City->save($this->request->data['City'])) 
+				{
+						$id=$this->City->getInsertID();
+						$name=$this->request->data['City']['name'];
+						$s_id=$this->request->data['City']['state_id'];
+						$sdata=$this->State->findByid($s_id);
+						$state='';
+						if(!empty($sdata))
+						{
+							$state=$sdata['State']['name'];
+						}
+					echo json_encode(array('status'=>'1000','message'=>'City added successfully', 'id'=>$id,'name'=>$name,'state'=>$state,'s_id'=>$s_id));
+				} 
+				else 
+				{
+					echo json_encode(array('status'=>'1001','message'=>'City could not be added'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	/*
+	Edit Country
+	Amit Sahu
+	28.06.17
+	*/
+	public function admin_editCity()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('State');
+		$this->loadModel('City');
+		
+		$this->admin_check_login();				
+		
+		if ($this->request->is('ajax')) 
+			{
+				
+				$id=$this->request->data['City']['id'];
+				if(!empty($id))
+					{
+					if ($this->City->save($this->request->data['City'])) 
+						{
+							$country="";
+							$s_id=$this->request->data['City']['state_id'];						
+							$name=$this->request->data['City']['name'];						
+							$cdata=$this->State->findByid($s_id);
+								
+								if(!empty($cdata))
+								{
+									$state=$cdata['State']['name'];
+								}
+							
+							
+							echo json_encode(array('status'=>'1000','message'=>'City edit successfully','id'=>$id,'state'=>$state,'name'=>$name,'s_id'=>$s_id));
+						} 
+						else 
+						{
+							echo json_encode(array('status'=>'1001','message'=>'City could not be edit'));
+						}
+					}
+			}
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+		/*
+	Kajal kurrewar
+	Reset District Search
+	4-7-2017
+	*/
+	public function admin_resetCitySearch() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		$this->admin_check_login();		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{			
+			$this->Session->delete('CitySearch');
+			$this->redirect($this->referer());	
+			
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}		
+		
+    }
+	
+
+}

@@ -1,0 +1,1169 @@
+<?php echo $this->Html->script('../plugins/chosen/chosen.jquery.min');
+ echo $this->Html->css('../plugins/chosen/chosen.min');
+
+ ?>
+ <?php 
+echo $this->Html->css('../plugins/bootstrap-datepicker/css/bootstrap-datepicker.min');
+
+?>
+<style>
+.table_head{color:#fff;}
+.input_class{color:#727272;font-size: 13px;border: 1px solid #e8dcdc;}
+</style>
+<?php
+$this->Paginator->options(array(
+    'update' => '#LayoutContent',
+    'evalScripts' => true,
+    'before' => $this->Js->get('#busy-indicator')->effect(
+        'fadeIn',
+        array('buffer' => false)
+    ),
+    'complete' => $this->Js->get('#busy-indicator')->effect(
+        'fadeOut',
+        array('buffer' => false)
+    ),
+));
+?>
+<!-- Page-Title -->
+<div class="row" >
+<div class="col-sm-12">
+<h4 class="page-title"> Master / User Profile</h4>
+</div>
+</div>
+	 
+<div class="row">
+	<div class="col-xs-12 col-lg-12 col-xl-12">
+		<div class="row">
+		<div class="col-sm-8">		
+		<?php echo $this->element('flash'); ?> 		 		
+		<?php 
+		echo $this->Form->create('User', array(
+	    'url'=>array('controller'=>'hrs','action'=>'employeeList','hr'=>true,'ext'=>URL_EXTENSION),
+		'class' => 'form-inline search_form', 			
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('control-label'),
+		'between' => '',
+		'after' => '',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));	
+		?>	
+		<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here','label'=>false)); ?>   
+		<?php
+		echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[User][Search]'));
+		?>	
+		
+		<?php
+		echo $this->Html->link('Reset',
+		array('controller' => 'hrs','action' => 'resetEmployeeSearch','hr'=>true,'ext'=>URL_EXTENSION),
+		array('escape'=>false,'class'=>'btn btn-info','title'=>'Reset Search'),array());			
+		?>	
+		<?php echo $this->Form->end(); 	?>		
+		</div>
+		<div class="col-sm-4 col-md-4">
+		<a href="#"class="btn btn-primary pull-right" data-toggle="modal" data-target="#AddUserModal"  data-controls-modal="AddUserModalLabel" data-backdrop="static" data-keyboard="false" >Add User</a>
+		</div>
+		</div>
+	</div>
+</div>
+<!--------List ----------------------------------->
+	<section class="content">
+	<div class="row">
+		<div class="col-xs-12 col-lg-12 col-md-12 col-sm-12">				
+		<div class="table-responsive">		
+			<table class="table table-bordered table-hover " id="tableToExcel" >
+				<thead class="text-white table_head">
+				<tr>
+				<th class="text-white  table_head">Sr.No</th>
+				<th class="text-white  table_head">Employee Name</th>		
+				<th class="text-white  table_head">Address</th>
+				<th class="text-white  table_head">Designation</th>
+				<th class="text-white  table_head">eduction</th>
+				<th class="text-white  table_head">PF.NO</th>
+				<th class="text-white  table_head">Contact No</th>
+				<th class="text-white  table_head">Salary</th>
+				<th class="text-white  table_head">Application Access</th>
+				<th class="text-white  table_head">Action</th>
+				</tr>
+				</thead>
+		
+		<tbody id="UserTable">
+			<?php
+			if(!empty($user))
+			{	
+				$i=0;		
+				foreach($user as $row)
+				{   
+				$i++;
+				?>
+				<tr id="UserRow<?php echo $row['User']['id']; ?>">
+					<td  id="srTd<?php echo $row['User']['id']; ?>" ><?php echo $i; ?></td>	
+					<td  id="nameTd<?php echo $row['User']['id']; ?>" ><?php echo ucwords(strtolower($row['User']['name']))." ".ucwords(strtolower($row['User']['middle_name']))." ".ucwords(strtolower($row['User']['last_name']));?></td>	
+					<td  id="addressTd<?php echo $row['User']['id']; ?>" ><?php echo ucwords(strtolower($row['User']['address'])); ?></td>	
+					<td  id="designationTd<?php echo $row['User']['id']; ?>" ><?php echo ucwords(strtolower($row['Role']['name'])); ?></td>	
+					<td  id="educationTd<?php echo $row['User']['id']; ?>" ><?php echo ucwords(strtoupper($row['User']['education'])); ?></td>	
+					<td  id="pfNOTd<?php echo $row['User']['id']; ?>" ><?php echo $row['User']['pf_no']; ?></td>	
+					<td  id="contactNOTd<?php echo $row['User']['id']; ?>" ><?php echo $row['User']['mobile_no']; ?></td>
+					<td  id="salaryTd<?php echo $row['User']['id']; ?>" ><?php echo $row['User']['salary']; ?></td>				
+					<td  id="accesscontrollTd<?php echo $row['User']['id']; ?>">
+					<?php 
+						if($row['User']['application_access']==0)
+						{
+							echo "NO";
+						}
+						elseif($row['User']['application_access']==1)
+						{
+							echo "YES";
+						}
+						?>
+					</td>					
+					<td>					
+						<a href="javascript:void()" class="btn btn-xs btn-info" title="Edit User" onclick="setEditUserdata(<?php echo $row['User']['id']; ?>)"><i class="fa fa-edit"></i></a>
+						<a href="javascript:void()" class="btn btn-xs btn-danger " title="Delete User" onclick="deleteUser(<?php echo $row['User']['id']; ?>)"><i class="fa fa-times-circle"></i></a>
+						<a href="javascript:void()" class="btn btn-xs btn-success" title="View Exam Detail" id="btn_viewUser_<?php echo $row['User']['id']; ?>" onclick="viewUserDetail(<?php echo $row['User']['id']; ?>)"><i class="fa fa-eye"></i></a>
+					</td>					
+				</tr>
+			<?php
+			}?>
+			<tr style="display:none;"><td id="srnumid"><?php echo $i;?></td></tr>
+		<?php
+		}
+		else
+		{
+		?>
+		<tr id="noLedger">
+		<td colspan="10" align="center" >No Records</td>
+		</tr>
+		<?php
+		}
+		?>
+		
+	   </tbody>
+		</div>
+
+		</table>
+		
+		</div>
+	</div>
+</div>
+</section>
+<?php echo $this->element('pagination'); ?>   
+<!-- -------------------------------------------Addusers--------------------------------------------------- -->
+
+<div class="modal fade" id="AddUserModal" tabindex="-1" role="dialog" aria-labelledby="AddUserModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Add Employee</h4>		
+      </div>
+		<?php 
+		echo $this->Form->create('User', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addUserForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>' control-label'),
+		'between' => '<div class="">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+		<div class="modal-body">
+			<div class="row">
+				<div class="col-sm-12 col-lg-12 col-md-12 col-xs-12">
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>FirstName<span class="required_fields"> *</span></label>
+					
+					<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+					
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+					<label>LastName<span class="required_fields"> *</span></label>	
+					<?php echo $this->Form->input('last_name',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+					<label>Application Access<span class="required_fields"> *</span></label>	
+			
+						<?php 
+						$post_arr=array( 
+							0=>'NO',
+							1=>'YES'				
+						);
+						echo $this->Form->input('application_access',array('type'=>'select','options'=>$post_arr,'empty'=>'Select Access','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+					<label>Address<span class="required_fields"> *</span></label>				
+					<?php echo $this->Form->input('address',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+						<label>Contact No<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('mobile_no',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+						<label class="control-label">email<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('email',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+						<label class="control-label">Salary<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('salary',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+				
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+						<label class="control-label">Designation<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('role_id',array('type'=>'select','options'=>$roleList,'class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">		
+						<label class="control-label">Education</label>	
+						<?php echo $this->Form->input('education',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">	
+						<label class="control-label">Date Of Joining</label>	
+						<?php echo $this->Form->input('date_of_joining',array('type'=>'text','class'=>'form-control date-picker input_class','label'=>false)); ?>		
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+			
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">		
+						<label class="control-label">PF.NO<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('pf_no',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>		
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">		
+						<label class="control-label">Alternate Contact No<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('alt_mobile_no',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>		
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				<div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">		
+						<label class="control-label">Emergency Contact No<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('emergency_contact',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>		
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">			
+						<label class="control-label">Id Proof Type</label>	
+						<?php echo $this->Form->input('id_proof_type',array('type'=>'select','options'=>$idproofList,'class'=>'form-control input_class','label'=>false)); ?>		
+					</div>
+				</div>
+				<div class="row voffset2"></div>	
+				
+				 <div class="row">
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+						<label class="control-label">Id Proof No</label>	
+						<?php echo $this->Form->input('id_proof_no',array('type'=>'text','class'=>'form-control input_class','label'=>false)); ?>		
+					</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12"></div>
+				
+			     <div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Country <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('country',array('type'=>'select','options'=>$countryList,'empty'=>'select country','id'=>'countryEditadd','class'=>'form-control input_class select_country_list','label'=>false,'country-no'=>'1')); ?>
+				</div>
+				</div>
+				<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>State <span class="required_fields">*</span></label>				
+					<?php echo $this->Form->input('state',array('type'=>'select','options'=>$getStates,'empty'=>'select state ','id'=>'stateEditadd','class'=>'form-control input_class select_state_list_1 onchange_state','label'=>false,'state-no'=>'1')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>City <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('city',array('type'=>'select','options'=>$getCities,'empty'=>'select city','id'=>'cityEditadd','class'=>'form-control input_class select_city_list_1','label'=>false)); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+			<button type="submit" class="btn btn-info pull-right">Add User</button>
+		</div>
+		<?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+  </div>
+ </div>
+  <!------------------------------------Edit User ----------------------------------> 
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('User', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editUserForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Update Employee detail</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row">
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xs-12">	
+		 <?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'editUserId')); ?>
+		
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>First Name<span class="required_fields">*</span></label>				
+					<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'First Name','class'=>'form-control input_class','label'=>false,'id'=>'editFirstName')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Middle Name<span class="required_fields">*</span></label>			
+					<?php echo $this->Form->input('middle_name',array('type'=>'text','placeholder'=>'Middle Name','class'=>'form-control input_class','label'=>false,'id'=>'editMiddleName')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Last Name<span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('last_name',array('type'=>'text','placeholder'=>'Last Name','class'=>'form-control input_class','label'=>false,'id'=>'editLastName')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Address<span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('address',array('type'=>'text','placeholder'=>'Address','class'=>'form-control input_class','label'=>false,'id'=>'editAddress')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+				<label>Gender</label>
+				<?php 
+					$gender_arr=array(
+											0=>'Male',
+											1=>'Female'
+											);
+					 echo $this->Form->input('gender',array('type'=>'select','options'=>$gender_arr,'class'=>'form-control input_class','label'=>false,'id'=>'editGender')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Marrage Status<span class="required_fields">*</span></label>
+					<?php
+								$status_arr=array(
+										0=>'Other',
+										1=>'Married',
+										2=>'Unmarried'
+										);
+								echo $this->Form->input('status',array('type'=>'select','options'=>$status_arr,'class'=>'form-control input_class','label'=>false,'id'=>'editMaritalStatus')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>				
+		
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Mobile No <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('mobile',array('type'=>'text','placeholder'=>'Mobile No','class'=>'form-control input_class','label'=>false,'id'=>'editContact')); ?>
+				</div>
+					<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+						<label>Email <span class="required_fields">*</span></label>
+						<?php echo $this->Form->input('email',array('type'=>'text','placeholder'=>'Email','class'=>'form-control input_class','label'=>false,'id'=>'editemail')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Date Of Birth <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('dob',array('type'=>'text','placeholder'=>'Date of Birth','class'=>'form-control date-picker input_class','label'=>false,'id'=>'editdob')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Country <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('country_id',array('type'=>'select','options'=>$countryList,'empty'=>'select country','id'=>'countryEdit','class'=>'form-control input_class select_country_list','label'=>false,'country-no'=>'1')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+	
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>State <span class="required_fields">*</span></label>				
+					<?php echo $this->Form->input('state_id',array('type'=>'select','options'=>$getStates,'empty'=>'select state ','id'=>'stateEdit','class'=>'form-control input_class select_state_list_1 onchange_state','label'=>false,'state-no'=>'1')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>City <span class="required_fields">*</span></label>
+					<?php echo $this->Form->input('city_id',array('type'=>'select','options'=>$getCities,'empty'=>'select city','id'=>'cityEdit','class'=>'form-control input_class select_city_list_1','label'=>false)); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Pin Code <span class="required_fields">*</span></label>			
+						<?php echo $this->Form->input('pin_code',array('type'=>'text','placeholder'=>'Email','class'=>'form-control input_class','label'=>false,'id'=>'editPinCode')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Date Of Joining <span class="required_fields">*</span></label>			
+						<?php echo $this->Form->input('dateOfJoining',array('type'=>'text','placeholder'=>'Date Of Joining','class'=>'form-control  date-picker input_class','label'=>false,'id'=>'editDateOfJoining')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Salary<span class="required_fields">*</span></label>
+				
+						<?php echo $this->Form->input('salary',array('type'=>'text','placeholder'=>'Salary','class'=>'form-control input_class','label'=>false,'id'=>'editSalary')); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>PF No<span class="required_fields">*</span></label>			
+					<?php echo $this->Form->input('pf_no',array('type'=>'text','placeholder'=>'Salary','class'=>'form-control input_class','label'=>false,'id'=>'editPfNo')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Indentity<span class="required_fields">*</span></label>			
+					<?php echo $this->Form->input('IdProof',array('type'=>'select','options'=>$idproofList,'empty'=>'select Id Proof','id'=>'editIdProof','class'=>'form-control input_class','label'=>false)); ?>
+				</div>		
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Id Proof No<span class="required_fields">*</span></label>			
+						<?php echo $this->Form->input('idProofNo',array('type'=>'text','placeholder'=>'Id Proof No','class'=>'form-control input_class','label'=>false,'id'=>'editIdNo')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Roll<span class="required_fields">*</span></label>				
+						<?php echo $this->Form->input('Rol_id',array('type'=>'select','options'=>$roleList,'empty'=>'select Roll','id'=>'editRoll','class'=>'form-control input_class','label'=>false)); ?>
+				</div>
+				<div class="col-sm-6 col-lg-6 col-md-6 col-xs-12">
+					<label>Application Access<span class="required_fields">*</span></label>				
+					<?php
+						$per_arr=array(
+								0=>'NO',
+								1=>'YES'									
+								);
+						echo $this->Form->input('permission',array('type'=>'select','options'=>$per_arr,'class'=>'form-control input_class','label'=>false,'id'=>'editapplication_access_id')); ?>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+		</div>
+		</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right" id="ntRecBtn">Update</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+	</div>
+    
+  </div>
+ </div>
+ <!-- ----------------------------model to show User detail ----------------------------------- -->
+
+<div class="modal fade" id="DisplayUserModal" tabindex="-1" role="dialog" aria-labelledby="DisplayUserModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Employee Details</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('User', array(
+		'class' => 'form-horizontal', 
+		'id'=>'displayUserDetail',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-12">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+		<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'id')); ?>
+      <div class="modal-body">
+	 
+	    <div class="row">
+			<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
+			<div class="row voffset2"></div>
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>FirstName </label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_name"></span>  <span  id="view_middle_name"></span>   <span  id="view_last_name"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+		
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Mobile No</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_mobile_no"></span> , <span  id="view_alt_mobile_no"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Email</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_email"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+				<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Gender</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_gender"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Marrage Status </label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_married_status"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Date Of Birth</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_dob"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Address</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_address"></span> , <span  id="view_city"></span> , <span  id="view_state"> </span>, <span  id="view_country"></span>.
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Pin No</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_pin"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Education</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_education"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Date Of Joining</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_date_joining"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Salary</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_salary"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+	
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Pf No.</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_pf_no"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+		
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Roll</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+						<span  id="view_roll"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+			<div class="row">
+				<div class="col-md-4 col-lg-4 col-sm-4 col-xs-12">		
+					<label>Application Access</label>
+				</div>
+				<div class="col-md-8 col-lg-8 col-sm-8 col-xs-12">
+					<span  id="view_application_access"></span>
+				</div>
+			</div>
+			<div class="row voffset2"></div>
+			
+	    <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      </div>
+	  
+	  </div>
+	  </div>
+	  </div>
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+
+<?php echo $this->Html->script('../plugins/bootstrap-datepicker/js/bootstrap-datepicker.min'); ?>
+<?php echo $this->Js->writeBuffer(); ?>
+ <script>
+ $('.date-picker').datepicker({
+
+	orientation: "auto",
+
+	autoclose: true,
+
+	todayHighlight: true,
+
+	format: "dd-mm-yyyy",
+
+});
+
+	
+	$(".select_country_list").on('change focus',function() {
+	
+	var country_no=$(this).attr('country-no');
+	var id = $(this).val();	
+
+	$(".select_state_list_"+country_no).find('option').remove();
+	$('<option>').val('').text(' Select State ').appendTo($(".select_state_list_1"));			
+	if (id) {
+	var dataString = 'id='+ id;
+	$.ajax({
+		type: "POST",
+		url: '<?php echo Router::url(array("controller"=>"commons","action" => "getStates",'admin'=>false)); ?>',
+		data: dataString,
+		cache: false,
+		success: function(html) {		
+          	
+			$('.select_state_list_'+country_no).html(html.data);			
+				
+			if($( ".select_state_list_"+country_no ).hasClass( "chosen-select" ))
+			{
+				$(".select_state_list_"+country_no).trigger("chosen:updated");								
+			}			
+		} 
+	});
+	}	
+	});	
+
+$(".onchange_state").on('change focus',function() {
+	var state_no=$(this).attr('state-no');
+	var id = $(this).val();			
+	$(".select_city_list_1").find('option').remove();
+	$('<option>').val('').text(' Select City/District ').appendTo($(".select_city_list_"+state_no));			
+	if (id) {
+	var dataString = 'id='+ id;
+	$.ajax({
+		type: "POST",
+		url: '<?php echo Router::url(array("controller"=>"commons","action" => "getCities",'admin'=>false)); ?>',
+		data: dataString,
+		cache: false,
+		success: function(html) {								
+			
+			$('.select_city_list_'+state_no).html(html.data);			
+				
+			if($( ".select_city_list_"+state_no ).hasClass( "chosen-select" ))
+			{							
+				$(".select_city_list_"+state_no).trigger("chosen:updated");			
+			}		
+			
+		} 
+	});
+	}	
+	});
+	
+ $("#addUserForm").validate({
+           
+		   rules: {			
+				"data[User][name]": {
+                    required: true,                   
+                },
+				"data[User][last_name]": {
+                    required: true,                   
+                },
+				"data[User][email]": {
+                    required: true, 
+					email : true,
+                },
+				"data[User][mobile_no]": {
+                    required: true,  
+                    number:true,
+					minlength:10,     
+					maxlength:10, 					
+                },
+				"data[User][role_id]": {
+                   required: true,  
+                   					
+                },
+				"data[User][salary]": {
+                    required: true,  
+                   
+				},
+				"data[User][address]": {
+                    required: true,  
+                   
+				},"data[User][alt_mobile_no]": {
+                    required: true,  
+                    number:true,
+					minlength:10,     
+					maxlength:10, 					
+                },"data[User][emergency_contact]": {
+                    required: true,  
+                    number:true,
+					minlength:10,     
+					maxlength:10, 					
+                },"data[User][pf_no]": {
+                    required: true,  
+                   
+				},"data[User][city]": {
+                    required: true,  
+                   
+				},"data[User][country]": {
+                    required: true,  
+                   
+				},"data[User][state]": {
+                    required: true,  
+                   
+				},"data[User][application_access]": {
+                    required: true,  
+                   
+				},
+				 
+            },
+            messages: { 
+				"data[User][name]": {
+                    required: "Please enter first name",                   
+                },
+				"data[User][last_name]": {
+                    required: "Please enter last name",              
+                },
+				"data[User][email]": {
+                    required: "Please enter email address",
+                    email:"Please enter a valid email", 					
+                },
+				"data[User][mobile_no]": {
+                    required: "Please enter mobile number",
+                    number: "Please enter numbers only",
+					minlength: "Please enter 10 digit mobile number",      
+					maxlength: "Please enter 10 digit mobile number",  					
+                },
+				"data[User][role_id]": {
+                   
+                    number: "Please select designation!",
+					
+                },
+				"data[User][salary]": {
+                   
+                    number: "Please enter salary!",
+					
+                },
+				"data[User][address]": {
+                   
+                    number: "Please enter address!",
+					
+                },
+				"data[User][alt_mobile_no]": {
+                    required: "Please enter  mobile number",
+                    number: "Please enter numbers only",
+					minlength: "Please enter 10 digit mobile number",      
+					maxlength: "Please enter 10 digit mobile number",  					
+                },
+				"data[User][emergency_contact]": {
+                    required: "Please enter mobile number",
+                    number: "Please enter numbers only",
+					minlength: "Please enter 10 digit mobile number",      
+					maxlength: "Please enter 10 digit mobile number",  					
+                },
+				"data[User][pf_no]": {
+                    required: "Please enter PF Number",
+                    
+                },
+				"data[User][city]": {
+                    required: "Please select city",
+                    
+                },
+				"data[User][country]": {
+                    required: "Please select country",
+                    
+                },
+				"data[User][state]": {
+                    required: "Please select state",
+                    
+                },
+				"data[User][application_access]": {
+                    required: "Please select application access yes or no",
+                    
+                },
+			}
+        });
+ $("#editUserForm").validate({
+           
+		   rules: {			
+				"data[User][name]": {
+                    required: true,                   
+                },
+				"data[User][last_name]": {
+                    required: true,                   
+                },
+				"data[User][email]": {
+                    required: true, 
+					email : true,
+                },
+				"data[User][mobile_no]": {
+                    required: true,  
+                    number:true,
+					minlength:10,     
+					maxlength:10, 					
+                },
+				"data[User][role_id]": {
+                   required: true,  
+                   					
+                },
+				"data[User][password]": {
+                    required: true,  
+                   
+				},
+				"data[User][username]": {
+                    required: true,  
+                   
+				}
+				 
+            },
+            messages: { 
+				"data[User][name]": {
+                    required: "Please enter first name",                   
+                },
+				"data[User][last_name]": {
+                    required: "Please enter last name",              
+                },
+				"data[User][email]": {
+                    required: "Please enter email address",
+                    email:"Please enter a valid email", 					
+                },
+				"data[User][mobile_no]": {
+                    required: "Please enter mobile number",
+                    number: "Please enter numbers only",
+					minlength: "Please enter 10 digit mobile number",      
+					maxlength: "Please enter 10 digit mobile number",  					
+                },
+				"data[User][role_id]": {
+                   
+                    number: "Please select one option!",
+					
+                },
+				"data[User][password]": {
+                    required: "Please enter password",
+                    
+                },
+				"data[User][username]": {
+                    required: "Please enter username",
+                    
+                }
+			}
+        });
+ 
+ 
+ $("#addUserForm").on('submit', (function(e) {
+	//alert("hii");
+		e.preventDefault();
+		if($('#addUserForm').valid()==true)
+		{
+			var srnoa= $('#srnumid').html();
+		srno=srnoa++;
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'hrs','action' => 'addEmployee','hr'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#AddUserModal').modal('hide');}, 100);
+					document.getElementById("addUserForm").reset();
+					
+					$('#UserTable').prepend('<tr id="UserRow'+data.id+'"><td>'+srno+'</td><td id="nameTd'+data.id+'">'+data.name+data.last_name+'</td><td id="addressTd'+data.id+'">'+data.address+'</td><td id="designationTd'+data.id+'">'+data.role_id+'</td><td id="educationTd'+data.id+'">'+data.education+'</td><td id="pfNOTd'+data.id+'">'+data.pf_no+'</td><td id="contactNOTd'+data.id+'">'+data.mobile_no+'</td><td id="salaryTd'+data.id+'">'+data.salary+'</td><td id="accesscontrollTd'+data.id+'">'+data.type+'</td><td><a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditUserdata('+data.id+')"><i class="fa fa-edit"></i></a><a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deleteUser('+data.id+')"><i class="fa fa-times-circle"></i></a><a href="javascript:void()" class="btn btn-xs btn-success " onclick="viewUserDetail('+data.id+')"><i class="fa fa fa-eye"></i></a></td></tr>');
+					$('.alertFadeOut').fadeOut(401, function () 
+					{
+                          $('#alertFadeOut').text('');		
+					});
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+					$('.alertFadeOut').fadeOut(2000, function () 
+					{
+
+                          $('#alertFadeOut').text('');
+						  
+						  
+					});
+				}
+			}
+		});
+		}
+	}));
+	<!-------------------------------------------------------Delete User------------------------------------------->
+function deleteUser(data_id){
+	//alert();
+	var ans= confirm("Are you sure you want to delete this User ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id+'&model=User';
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'hrs','action' => 'deleteByModalOrId','hr'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+							$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> Standard deleted successfully.</div>');
+							$('.alertFadeOut').fadeOut(2000, function () 
+							{
+
+								  $('#alertFadeOut').text('');
+								  
+								  
+							});
+							$('#UserTable #UserRow'+data.id).remove();
+							
+							
+						}else{
+							$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> Standard counld not be deleted .</div>');
+							$('.alertFadeOut').fadeOut(2000, function () 
+							{
+
+								  $('#alertFadeOut').text('');
+								  
+								  
+							});
+							
+						}
+					
+                   }
+             });
+        }
+
+}
+
+function setEditUserdata(id)
+{
+	var id=id;
+
+	$('#editUserId').val(id);
+	
+	  var data = 'id=' +id;
+//alert(data);
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'hrs','action' => 'getDataByUser','hrs'=>true));?>" ,
+			type: "POST",
+			data: data,
+            cache: false,
+			dataType:'json', 
+			success: function(data)
+			{
+				if (data.status == 200) 
+				{	
+					$('#editFirstName').val(data.name);
+					$('#editMiddleName').val(data.middle_name);
+					$('#editLastName').val(data.last_name);
+					$('#editemail').val(data.email);
+					$('#editContact').val(data.mobile_no);
+					$('#editAddress').val(data.address);
+					$('#editDob').val(data.dob);
+					$('#editDateOfJoining').val(data.date_joining);
+					$('#editEducation').val(data.education);
+					$('#editIdNo').val(data.id_type_no);
+					$('#editPfNo').val(data.pf_no);
+					$('#editIdProofName').val(data.idProofName);
+					$('#editMaritalStatus').val(data.marital_status_id);
+					$('#editSalary').val(data.salary);
+					$('#editGender').val(data.gender_id);
+					$('#countryEdit').val(data.country);
+					$('#stateEdit').val(data.state);
+					$('#cityEdit').val(data.city);
+					$('#editRoll').val(data.role_id_no);
+					$('#editIdProof').val(data.id_type);
+					$('#editPinCode').val(data.pin);
+					$('#editapplication_access_id').val(data.application_access_id);
+			
+				}
+				else 
+				{
+					
+				}
+			}
+		});
+	$('#editUserModal').modal('show');
+}
+
+<!-----------------------  edit User --------------->	
+   $("#editUserForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#editUserForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'hrs','action' => 'editEmployee','hrs'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#editUserModal').modal('hide');}, 100);
+					document.getElementById("editUserForm").reset();
+					
+					
+					$('#nameTd'+data.id).html(data.name);
+					$('#UserroleTd'+data.id).html(data.type);
+					
+					
+					$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                          $('#alertFadeOut').text('');
+					});
+			
+			    }
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+					
+					$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+				}
+			}
+		});
+		}
+	}));
+	
+	/*---------------------------------view User detail-----------------------------------------*/
+function viewUserDetail(id){	
+            var data = 'id=' + id ;
+			$.ajax(
+            {
+                   type: "POST",
+                 	url: "<?php echo Router::url(array('controller' => 'hrs','action' => 'getDataByUser','hrs'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					   if (data.status == 200) 
+						{	
+						
+							$('#view_name').html(data.name);
+							$('#view_middle_name').html(data.middle_name);
+							$('#view_last_name').html(data.last_name);
+							$('#view_mobile_no').html(data.mobile_no);
+							$('#view_alt_mobile_no').html(data.alt_mobile_no);
+							$('#view_email').html(data.email);
+							$('#view_address').html(data.address);
+							$('#view_city').html(data.cityName);
+							$('#view_state').html(data.stateName	);
+							$('#view_country').html(data.countryName);
+							$('#view_date_joining').html(data.date_joining);						
+							$('#view_pin').html(data.pin);
+							$('#view_education').html(data.education);
+							$('#view_pf_no').html(data.pf_no);
+							$('#view_salary').html(data.salary);
+							$('#view_gender').html(data.gender);
+							$('#view_date_joining').html(data.date_joining);
+							$('#view_dob').html(data.dob);
+							$('#view_roll').html(data.role_id);
+							$('#view_married_status').html(data.marital_status);
+							$('#view_application_access').html(data.application_access);
+							
+							
+						}
+					}
+             });
+		$('#DisplayUserModal').modal('show');
+	}
+	
+
+ </script>

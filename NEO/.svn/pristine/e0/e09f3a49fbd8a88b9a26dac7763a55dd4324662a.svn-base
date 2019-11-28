@@ -1,0 +1,272 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                <div class="page-header float-left">
+                    <div class="page-title">
+                        <h4>Add Company</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="page-header float-right">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">Company</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+		
+<div class="col-sm-12">
+    <?php
+    echo $this->element('flash');
+   
+    ?>
+    
+	<div class="col-sm-1"></div>
+	<div class="col-sm-10">
+	<a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#addRFQModal"  data-controls-modal="addRFQModalLabel" data-backdrop="static" data-keyboard="false" >Add Customer</a>
+	
+    <?php echo $this->Form->create('Rfq', array('id'=>'addRfqform','novalidate' => true, 'type' => 'file')); ?>
+    <div class="form-group">
+        <div class="col-sm-12">
+            <?php echo $this->Form->input('customer_id', array('type'=>'select','options'=>$customerList,'label' => 'Customer Name', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('part_no', array('type'=>'text','label' => 'Part Number', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+        
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+           
+            <?php echo $this->Form->textarea('part_discreption', array('label' => 'Part Description', 'div' => false, 'class' => 'ckeditor', 'rows' => '', 'cols' => '')); ?>
+        </div>
+    </div>  
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('part_weight', array('type'=>'text','label' => 'Part Weight (KG)', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('mfg_id', array('type'=>'select','options'=>$mfqList,'label' => 'MFQ Location', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('packing_type', array('type'=>'select','options'=>$packing_type,'label' => 'Type of Packing', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('quantity', array('type'=>'text','label' => 'Approx Quantity', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+           <div>
+	<?php
+	$options = array('Pices' => '&nbsp;Pices ', 'Bin' => '&nbsp;Bin ');
+	$attributes = array(
+	'legend' => false,
+	'separator'=>' &nbsp;&nbsp; ',
+	'default'=>'Pices'
+	);
+	echo $this->Form->radio('quantity_unit', $options, $attributes);
+	?>
+	</div>
+        </div>
+    </div>  
+	
+<div>
+<div class="col-sm-12 inputDivision">
+        <input type="submit" value="Add" class="btn btn-success">
+        <button type="button" onclick="window.location ='addRfq'" class="btn btn-primary">Cancel</button> 
+    </div>   
+    <?php echo $this->Form->end(); ?>    
+</div>   
+<?php
+ echo $this->Html->script('../plugins/ckeditor/ckeditor');
+echo $this->Html->script('../plugins/ckeditor/adapters/jquery');
+?>
+</div>
+</div>
+
+	
+<!------------------------------------Add customer----------------------------------------->
+<div class="modal fade" id="addRFQModal" tabindex="-1" role="dialog" aria-labelledby="addRFQModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('Customer', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addCustForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Add Customer</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row ">
+			
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Name <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('customer_name',array('type'=>'text','placeholder'=>'Name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Company Name <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('customer_company',array('type'=>'text','placeholder'=>'Enter company name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Contact No <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('contact_nao',array('type'=>'text','placeholder'=>'Enter Contact Number','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			
+			
+		</div>
+		
+			
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+	
+		
+       <button type="submit" id="addSocietySubBtn" class="btn btn-danger pull-right" >Add</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ </div>
+
+<script type="text/javascript">
+$("#addRfqform").validate({  
+		          
+            rules: {			
+				
+                "data[Rfq][customer_id]": {
+                    required: true,                   
+                },
+				"data[Rfq][part_no]": {
+                    required: true,                   
+                },
+				"data[Rfq][packing_type]": {
+                    required: true,                   
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Rfq][customer_id]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Rfq][part_no]": {
+                    required: "Please enter part number.",
+                },
+				"data[Rfq][packing_type]": {
+                    required: "Please enter packing type.",
+                },
+							
+            }
+        });
+   
+   
+   /******************    add validation for add customer ******/
+   
+   $("#addCustForm").validate({  
+		          
+            rules: {			
+				
+                "data[Customer][customer_name]": {
+                    required: true,                   
+                },
+				"data[Customer][customer_company]": {
+                    required: true,                   
+                },
+				"data[Customer][contact_no]": {
+                    required: true, 
+                     number:true,					
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Customer][customer_name]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Customer][customer_company]": {
+                    required: "Please enter company name.",
+                },
+				"data[Customer][contact_no]": {
+                    required: "Please enter contact number.",
+					number:"Please enter number",
+                },
+							
+            }
+        });
+   /*------------------------------------------------Add Customer--------------------------------------------*/
+ $("#addCustForm").on('submit', (function(e) {
+		e.preventDefault();
+		
+		//alert("hiii");
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'addCustomer','compadmin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#addRFQModal').modal('hide');}, 100);
+					document.getElementById("addCustForm").reset();
+					
+				
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		
+	}));
+	
+</script>

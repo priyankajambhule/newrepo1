@@ -1,0 +1,370 @@
+
+	<div class="breadcrumbs">
+		<div class="col-sm-4">
+				<div class="page-title">
+					<h2>RFQ LIST</h2>
+				</div>
+		</div>
+		<div class="col-sm-8">
+				<div class="page-title">
+					<ol class="breadcrumb text-right">
+						<li class="active">RFQ</li>
+						<li class="active"> LIST</li>
+					</ol>
+				</div>
+		</div>
+	</div>
+				
+<div class="container">
+		<div class="col-sm-8">		
+			<div class="row">
+			<?php echo $this->element('flash'); ?> 		 		
+			<?php 
+			echo $this->Form->create('Rfq', array(
+			'url'=>array('controller'=>'toolrooms','action'=>'rfqList','toolroom'=>true,'ext'=>URL_EXTENSION),
+			'class' => 'search_form', 			
+			'novalidate' => true,		
+			'role' => 'form',
+			'inputDefaults' => array(
+			'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+			'div' => array('class' => 'form-group col-sm-4'),
+			'class' => array('form-control'),
+			'label' => array('control-label'),
+			'between' => '',
+			'after' => '',
+			'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+			)));	
+			?>	
+			<!--<?php //echo $this->Form->input('',array('type'=>'text','class'=>'form-control','placeholder'=>'Search Here By ISSN','label'=>false)); ?>   
+			
+			<?php
+			//echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','issn'=>'data[ProductSku][Search]'));
+			?>	
+			<?php
+			//echo $this->Html->link('Reset',
+			//array('controller' => 'managements','action' => //'resetProductSku','admin'=>true,'ext'=>URL_EXTENSION),
+			//array('escape'=>false,'class'=>'btn btn-danger','title'=>'Reset Search'),array());			
+			?>	
+			<?php// echo $this->Form->end(); 	?>-->
+				</div>
+			</div>
+			<!--<div class="col-sm-4">
+			<a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#addProductModal"  data-controls-modal="addProductModalLabel" data-backdrop="static" data-keyboard="false" >Add Product SKU</a>
+		
+		</div>-->
+		
+	</div>
+	<div class="row voffset2"></div>
+		<div class="col-sm-12">		
+		<div class="table-responsive">		
+			<table class="table table-bordered master_table">
+				<thead class="thead-dark">
+					<tr>
+					<th><?php echo $this->Paginator->sort('Rfq.id', __('ESr.No'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.created', __('Enquery Date'), array('escape' => FALSE)); ?></th>
+					<th><?php echo $this->Paginator->sort('Ledger.company_name', __('Enquery By'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.project', __('Project'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.part_no', __('Part No'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.part_name', __('Part Name'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.quantity', __('QPV'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('MfgLocation.area', __(' Plant Location'), array('escape' => FALSE)); ?></th>	
+					<th><?php echo $this->Paginator->sort('Rfq.toolroom_status', __('Status'), array('escape' => FALSE)); ?></th>	
+				    <th><?php echo $this->Paginator->sort('Rfq.images', __('Image'), array('escape' => FALSE)); ?></th>	
+					<th>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody id="stateTable">
+					<?php
+					if(!empty($products))	
+					{
+						$i=($this->request->params['paging']['Rfq']['page']-1) * $this->request->params['paging']['Rfq']['limit']; 
+						
+						foreach ($products as $row)
+						{                   
+							$i++;
+							if($i % 2==1)
+							{
+								$class='bg-tr';
+							}
+							else
+							{
+								$class='table_eventr';
+							}
+							?>
+							<tr class="<?php echo $class; ?>" id="contryTr<?php echo $row['Rfq']['id']; ?>">		
+								<td id="nametd<?php echo $row['Rfq']['id']; ?>"><?php echo $i; ?></td>	
+								<td id="editiontd<?php echo $row['Rfq']['id']; ?>"><?php echo date('d-m-Y',strtotime($row['Rfq']['created'])); ?></td>	
+								<td id="editiontd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['Ledger']['company_name']; ?></td>	
+								<td id="pricetd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['Rfq']['project']; ?></td>	
+								<td id="pricetd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['Rfq']['part_no']; ?></td>	
+								<td id="pricetd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['Rfq']['part_name']; ?></td>	
+								<td id="pricetd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['Rfq']['quantity']; ?></td>	
+								<td id="pricetd<?php echo $row['Rfq']['id']; ?>"><?php echo $row['MfgLocation']['area']; ?></td>	
+									<td id="statusTD<?php echo $row['Rfq']['id']; ?>">
+									<?php									
+										$toolroom_status=array(
+												0=>'PENDING',
+												1=>'RECEIVE',
+												
+										);
+										echo $toolroom_status[$row['Rfq']['design_status']]; 									
+									?>									
+								</td>
+							
+				<td id="designImageTd<?php echo $row['Rfq']['id']; ?>">
+				<?php if($row['Rfq']['image_visibility']==1||$row['Rfq']['image_visibility']==3){?>
+				<?php if(!empty($row['Rfq']['images'])){ ?>
+					<img width='35'id="<?php echo $row['Rfq']['id'];?>" height='35' src='<?php echo $this->webroot;?>images/rfqImages/<?php echo $row['Rfq']['project'];?>/<?php echo ($row['Rfq']['images']); ?>'  onclick="imagedisplay('<?php echo $row['Rfq']['project']?>','<?php echo ($row['Rfq']['images'])?>')">
+				<?php }
+				else{
+				?>
+				<img width='30' height='30' src='<?php echo $this->webroot;?>images/user/img.jpg'>
+				<?php
+				}}?>
+						
+					
+						</td>
+								<!--<td id="pricetd<?php// echo $row['Rfq']['id']; ?>"><?php //echo $row['Rfq']['toolroom_status']; ?></td>-->
+								<td ><a href="javascript:void()" class="btn btn-success btn-xs" onclick="viewdata(<?php echo $row['Rfq']['id']; ?>)"><i class="fa fa-eye" tabindex="3"></i></a>
+								<span id="changeStatus_<?php echo $row['Rfq']['id']; ?>">
+									<?php if($row['Rfq']['design_status']==0){ ?>
+									<a href="javascript:void()" id="rfqrecieve_<?php echo $row['Rfq']['id']; ?>" title="RFQ RECIEVE" class="btn btn-info btn-xs" onclick="setstatus(<?php echo $row['Rfq']['id']; ?>,1)"><i class="fa fa-check" aria-hidden="true"></i></a>
+									<?php }   if($row['Rfq']['design_status']==1){ ?>
+										<a href="javascript:void()" id="rfqpendding_<?php echo $row['Rfq']['id']; ?>" title="RFQ Pendding" class="btn btn-info btn-xs"><i class="fa fa-ban" aria-hidden="true"></i></a>
+									<?php } ?>
+									</span>
+								</td>	
+							</tr>	
+							<?php
+						}
+					}
+					else
+					{ 
+					?>
+					<tr>
+					<td colspan="3" align="center">No Records</td>
+					</tr>
+					<?php
+					}
+					?>
+				</tbody>
+			</table>
+			
+			<?php echo $this->element('pagination'); ?>  	
+		</div>
+		</div>
+		<!------------------------------------View Society----------------------------------------->
+<div class="modal fade" id="viewSocietyModal" tabindex="-1" role="dialog" aria-labelledby="ViewSocietyModalLabel">
+
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title "> Society Details</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row ">
+			
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Customer Name<span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyNameId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Packing Type <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyCountryId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Enquery <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyStateId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>City <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyCityId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Address <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyAddressId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Pin <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<span  id="viewSocietyPinId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Email</label>
+			</div>
+			 <div class="col-sm-8">
+					<span  id="viewSocietyEmailId"></span>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+		
+		</div>
+		 <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+
+      </div>
+
+	</div>
+    
+  </div>
+ </div>
+ </div>
+ <!-------------- displayimages --------->
+ <div class="modal fade" id="addIDisplayModal" tabindex="-1" role="dialog" aria-labelledby="addIDisplayModalLabel">
+  <div class="modal-dialog" role="document" style="width:350px;">
+    <div class="modal-content" >
+		
+      <!--<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+     
+		</div>-->
+		<div class="modal-body">
+		
+		<div id="imageDisplayID">
+			</div>
+      
+	 
+	</div>
+    
+  </div>
+ </div>
+ </div>
+  <!-------------- displayimages end --------->
+ <script type="text/javascript">
+
+function imagedisplay(path,img)
+	{
+		
+		$('#addIDisplayModal').modal('show');
+   
+       $('#imageDisplayID').html('<div class="media"><a href="#" class="pull-left"><img src="<?php echo $this->webroot;?>images/rfqImages/'+path+'/'+img+'" class="media-object" alt="Sample Image"></a></div>');
+
+	}
+</script>
+		<script>
+		function setstatus(id,status){
+		var rfq_id = id;	
+		var status = status;	
+		var data = 'rfq_id=' + rfq_id+'&status='+status;		
+	
+		$.ajax({
+					  type: "POST",
+					   url: "<?php echo Router::url(array('controller' => 'designdevelopments','action' => 'updateStatusdesign','design'=>true));?>" ,
+					   data: data,
+					   cache: false,
+					   dataType:'json', 
+					   success: function(data)
+					   {
+							 try{
+									if (data.status == 200) 
+									{									
+										if(data.design_status==1){	
+											$( '#rfqrecieve_'+data.id).hide();	
+											$('#statusTD'+data.id).html("RECEIVE");											
+											$( '#changeStatus_'+data.id).html("<a href='javascript:void()' class='btn btn-info btn-xs' title='RFQ RECIVICE' id='rfqrecieve_"+data.id+"' onclick='setstatus("+data.id+",1)'><i class='fa fa-ban' aria-hidden='true'></i></a>");
+										}
+																	
+										
+									}	
+									else{
+										
+									}
+							}
+							catch(error){
+										console.log(error);
+							}									
+					   }
+				});
+}
+	
+function viewdata(id)
+	{
+		$('#viewSocietyModal').modal('show');
+		
+		$('#EditSocietyId').val(id);
+		var data = 'id=' + id+'&model=Society';
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'commons','action' => 'getDataByModalOrId','admin'=>false));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+				   
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+					
+							
+								
+							
+							$('#viewSocietyNameId').html(data.mydata.Society.name);
+							$('#viewSocietyCountryId').html(data.mydata.Country.name);
+							$('#viewSocietyStateId').html(data.mydata.State.name);
+							$('#viewSocietyCityId').html(data.mydata.City.name);
+							$('#viewSocietyAddressId').html(data.mydata.Society.address);
+							$('#viewSocietyPinId').html(data.mydata.Society.pin);
+							$('#viewSocietyEmailId').html(data.mydata.Society.email);
+							$('#manualAdd_6').html('');
+							 var new_num = 1; 
+							 var root="<?php echo $this->webroot; ?>";
+							$(data.mydata.SocietyDocument).each(function( k, v ){
+								 new_num += 1; 
+								//alert(v.document_type);
+								$('#manualAdd_6').append('<tr id="addSocContactTr_'+new_num+'"><td>'+v.document_type+'</td><td><img src="'+root+'/images/society/'+v.image+'" style="width:25px;height:25px;"></td></tr>');
+								
+							});
+							
+							$('#manualAdd_5').html('');
+							 var new_num = 1; 
+							$(data.mydata.SocietyContact).each(function( k1, v1 ){
+								 new_num += 1; 
+								//alert(v.document_type);
+								var no=3;
+							$('#manualAdd_5').append('<tr id="addSocContactTr_'+new_num+'"><td>'+v1.number_type+'</td><td>'+v1.number+'</td></tr>');
+								
+							});
+							
+							$('#viewSocietyModal').modal('show');
+							
+						}else{
+							
+							
+						}
+					
+                   }
+             });
+		
+	}
+</script>

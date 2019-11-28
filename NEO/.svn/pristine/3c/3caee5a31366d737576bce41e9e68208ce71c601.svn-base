@@ -1,0 +1,101 @@
+<div class="row">
+<div class="col-sm-12">
+
+		<div class="col-sm-12">
+		<h1> Dashboard <small>Change Password</small></h1>
+		<ol class="breadcrumb" >
+		<li><a href="javascript:void();">Dashboard</a></li>
+		<li class="active"><a href="javascript:void();">Change Password</a></li>
+		</ol>
+		</div>
+		
+            <div class="clearfix"></div>
+            <div class="row">
+              <div class="col-md-12 col-sm-12">
+                <div class="x_panel">
+                  <div class="x_title">
+                    <h2>Change Password</h2>                    
+                    <div class="clearfix"></div>
+                  </div>
+                  <div class="x_content">
+				  <?php echo $this->element('flash'); ?> 
+                    <br />
+					<?php 
+					echo $this->Form->create('User', array(
+					'class' => 'form-horizontal form-label-left', 			
+					'novalidate' => true,		
+					'role' => 'form',
+					'inputDefaults' => array(
+					'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+					'div' => array('class' => 'form-group'),
+					'class' => array('form-control'),
+					'label' => array('class'=>'col-sm-3 control-label'),
+					'between' => '<div class="col-sm-6">',
+					'after' => '</div>',
+					'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+					)));
+					
+					?>	
+                      
+				<?php echo $this->Form->input('old_password',array('type'=>'password','placeholder'=>'Enter Old Password','label'=>array('text'=>'Old Password','class'=>'col-sm-3 control-label'))); ?>	
+				
+				<?php echo $this->Form->input('new_password',array('type'=>'password','placeholder'=>'Enter New Password','id'=>'UserNewPassword','label'=>array('text'=>'New Password','class'=>'col-sm-3 control-label'))); ?>	
+				
+				<?php echo $this->Form->input('confirm_password',array('type'=>'password','placeholder'=>'Confirm New Password','label'=>array('text'=>'Confirm Password','class'=>'col-sm-3 control-label'))); ?>	
+				
+				
+				  <div class="ln_solid"></div>
+				  <div class="form-group">
+                        <div class="col-sm-9">
+                       <?php echo $this->Form->button('Change Password',array('type'=>'submit','class'=>'btn btn-primary pull-left'));?>                         
+                        </div>
+                      </div>
+
+                   <?php echo $this->Form->end(); 	?>
+			
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+</div>
+
+<script type="text/javascript">
+$(function(){
+
+	$("#UserAdminChangePasswordForm").validate({            
+	rules: {
+		"data[User][old_password]": {
+			required: true,                   
+		},
+		"data[User][new_password]": {
+			required: true,
+			minlength:8,
+		},
+		"data[User][confirm_password]": {
+			required: true,
+			equalTo:"#UserNewPassword",
+		}
+	},
+	messages: {
+		"data[User][old_password]": {
+			required: "Please enter old password.",
+			minlength: "Minimum password length should be 8 characters.",
+		},
+		"data[User][new_password]": {
+			required: "Please enter new password.",
+			minlength: "Minimum password length should be 8 characters.",
+		},
+		"data[User][confirm_password]": {
+			required: "Please confirm above password.",
+			equalTo:"Password does not match"
+			
+		}
+	}
+});
+
+});
+
+
+</script>

@@ -1,0 +1,582 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                <div class="page-header float-left">
+                    <div class="page-title">
+                        <h4>Customer List</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="page-header float-right">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">Customer</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+<?php	
+$this->Paginator->options(array(
+    'update' => '#LayoutContent',
+    'evalScripts' => true,
+    'before' => $this->Js->get('#busy-indicator')->effect(
+        'fadeIn',
+        array('buffer' => false)
+    ),
+    'complete' => $this->Js->get('#busy-indicator')->effect(
+        'fadeOut',
+        array('buffer' => false)
+    ),
+));
+	
+?>
+
+<div class="row">
+<div class="col-xs-12 col-lg-12 col-xl-12">
+<div class="row">
+<div id="messageDiv"></div>
+		<div class="col-sm-8">		
+		<?php echo $this->element('flash'); ?> 		 		
+		<?php 
+		echo $this->Form->create('Ledger', array(
+		'url'=>array('controller'=>'companyadmins','action'=>'customerList','compadmin'=>true,'ext'=>URL_EXTENSION),
+		'class' => 'form-inline search_form', 			
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('control-label'),
+		'between' => '',
+		'after' => '',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));	
+		?>	
+		<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here','label'=>false)); ?>   
+		
+		<?php
+		echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[Ledger][Search]'));
+		?>	
+		<?php
+		echo $this->Html->link('Reset',
+		array('controller' => 'companyadmins','action' => 'resetCustomerSearch','compadmin'=>true,'ext'=>URL_EXTENSION),
+		array('escape'=>false,'class'=>'btn btn-info','title'=>'Reset Search'),array());			
+		?>	
+		<?php echo $this->Form->end(); 	?>		
+		</div>
+		<div class="col-sm-4 col-md-4">
+		<a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#AddCustomerModal"  data-controls-modal="AddPublisherModalModal" data-backdrop="static" data-keyboard="false" >Add Customer</a>
+		</div>
+		</div>
+		<div class="table-responsive">		
+		<table class="table  table-fixed-head table-bordered table-sm m-b-0 report_table_font" id="tableToExcel" >
+		<thead>
+		<tr class="text-white">
+
+		<th class="text-white  table_head">Customer Name</th>
+		<th class="text-white">Company Name</th>
+		<th class="text-white">Address</th>
+		<th >Contact Number</th>
+		<th>Email</th>
+		<th>Action</th>
+		</tr>
+		</thead>
+		
+		<tbody id="customerTable">
+			
+		<?php 
+		if(!empty($Customer))
+		{
+	
+		
+		foreach ($Customer as $row)
+		{                   
+	
+		?>
+		<tr id="custRow<?php echo $row['Ledger']['id']; ?>">
+		<td id="custNameTd<?php echo ucfirst(strtolower($row['Ledger']['id'])); ?>"><?php echo $row['Ledger']['name']; ?></td>
+		<td id="companyNameTd<?php echo ucfirst(strtolower($row['Ledger']['id'])); ?>"><?php echo $row['Ledger']['company_name']; ?></td>
+		<td id="addressNameTd<?php echo ucfirst(strtolower($row['Ledger']['id'])); ?>"><?php echo $row['PartyDetail']['address']; ?></td>
+		<td id="mobileNameTd<?php echo ucfirst(strtolower($row['Ledger']['id'])); ?>"><?php echo $row['PartyDetail']['mobile']; ?></td>
+		<td id="emailNameTd<?php echo ucfirst(strtolower($row['Ledger']['id'])); ?>"><?php echo $row['PartyDetail']['email']; ?></td>
+
+		<td>
+			<a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditCustomerdata(<?php echo $row['Ledger']['id']; ?>)"><i class="fa fa-edit"></i></a>
+			<a href="javascript:void()" class="btn btn-danger btn-xs " onclick="deleteCustomer(<?php echo $row['Ledger']['id']; ?>)"><i class="fa fa-times-circle"></i></a>
+		</td>
+		</tr>
+		<?php
+		}
+		}
+		else
+		{
+		?>
+		<tr>
+		<td colspan="4" align="center">No Records</td>
+		</tr>
+		<?php
+		}
+		?>
+		</tbody>
+		
+		</table>
+		
+		<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+	
+
+</div><!-- end col-->
+</div>
+<!---------------------------------------------Add Customer Modal----------------------------------------------------->
+<div class="modal fade" id="AddCustomerModal" tabindex="-1" role="dialog" aria-labelledby="AddCustomerModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Add New Customer</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Customer', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addCustomerForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+			<div class="row">
+					<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Company Name<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('company_name',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Address<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('address',array('type'=>'text','rows'=>2,'class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Mobile<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('mobile',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Email<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('email',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+						
+					<label class="col-sm-3 control-label">Country<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('country_id',array('type'=>'select','options'=>$countryList,'empty'=>'select country','class'=>'form-control input_class select_country_list','id'=>'ScountryId','label'=>false,'country-no'=>'1')); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">State<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('state_id',array('type'=>'select','empty'=>'select state ','class'=>'form-control input_class select_state_list_1 onchange_state','id'=>'SstateId','label'=>false,'state-no'=>'1')); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">City<span class="required_fields"> *</span></label>	
+					<?php echo $this->Form->input('city_id',array('type'=>'select','empty'=>'select city','class'=>'form-control input_class select_city_list_1','id'=>'ScityId','label'=>false)); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Pin Code<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('pin_code',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>			
+				
+			</div>
+	  </div>
+      <div class="modal-footer">
+			<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+			<button type="submit" class="btn btn-info pull-right">Add Customer</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+<!---------------------------------------------View Customer Modal----------------------------------------------------->
+<div class="modal fade" id="viewCustomerModal" tabindex="-1" role="dialog" aria-labelledby="AddCustomerModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">View Customer</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Customer', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editCustomerForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+			<div class="row">
+				<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'EditCustomerId')); ?>
+					<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control','id'=>'custNameEdit','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Company Name<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('company_name',array('type'=>'text','class'=>'form-control','id'=>'compantNameEdit','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Address<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('address',array('type'=>'text','rows'=>2,'class'=>'form-control','id'=>'addressEdit','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Mobile<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('mobile',array('type'=>'text','class'=>'form-control','id'=>'mobileEdit','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Email<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('email',array('type'=>'text','class'=>'form-control','id'=>'emailEdit','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+					
+					<label class="col-sm-3 control-label">Country<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('country_id',array('type'=>'select','options'=>$countryList,'empty'=>'select country','id'=>'countryEdit','class'=>'form-control input_class select_country_list','label'=>false,'country-no'=>'1')); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">State<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('state_id',array('type'=>'select','options'=>$getStates,'empty'=>'select state ','id'=>'stateEdit','class'=>'form-control input_class select_state_list_1 onchange_state','label'=>false,'state-no'=>'1')); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">City<span class="required_fields"> *</span></label>	
+					<?php echo $this->Form->input('city_id',array('type'=>'select','options'=>$getCities,'empty'=>'select city','id'=>'cityEdit','class'=>'form-control input_class select_city_list_1','label'=>false)); ?>
+					<div class="col-sm-12 voffset2"></div>
+					<label class="col-sm-3 control-label">Pin Code<span class="required_fields"> *</span></label>	
+						<?php echo $this->Form->input('pin_code',array('type'=>'text','id'=>'pinCodeEdit','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>			
+				
+			</div>
+	  </div>
+      <div class="modal-footer">
+			<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+			<button type="submit" class="btn btn-info pull-right">Update Customer</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+<?php echo $this->Html->script('../plugins/fixed_table/jquery.michiweber.table-head-fixed');?>
+<?php echo $this->Js->writeBuffer(); ?>
+
+<script type="text/javascript">
+<!------------------------Add form validation ----------------------------------->
+   $("#addCustomerForm").validate({  
+		          
+            rules: {			
+				
+                "data[Customer][name]": {
+                    required: true,                   
+                },
+				"data[Customer][company_name]": {
+                    required: true,                   
+                },
+				"data[Customer][address]": {
+                    required: true,                   
+                },
+				"data[Customer][email]": {
+                    required: true,                   
+                },
+				"data[Customer][mobile]": {
+                    required: true, 
+                     number:true,					
+                },
+				"data[Customer][pin_code]": {
+                    required: true, 
+                  				
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Customer][name]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Customer][company_name]": {
+                    required: "Please enter company name.",
+                },
+				"data[Customer][address]": {
+                    required: "Please enter address.",
+                },
+				"data[Customer][email]": {
+                    required: "Please enter email.",
+                },
+				"data[Customer][pin_code]": {
+                    required: "Please enter pin code.",
+                },
+				"data[Customer][mobile]": {
+                    required: "Please enter contact number.",
+					number:"Please enter number",
+                },
+							
+            }
+        });
+	<!------------------------update form validation ----------------------------------->
+		 $("#editCustomerForm").validate({  
+		          
+            rules: {			
+				
+                "data[Customer][name]": {
+                    required: true,                   
+                },
+				"data[Customer][company_name]": {
+                    required: true,                   
+                },
+				"data[Customer][address]": {
+                    required: true,                   
+                },
+				"data[Customer][email]": {
+                    required: true,                   
+                },
+				"data[Customer][mobile]": {
+                    required: true, 
+                     number:true,					
+                },
+				"data[Customer][pin_code]": {
+                    required: true, 
+                  				
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Customer][name]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Customer][company_name]": {
+                    required: "Please enter company name.",
+                },
+				"data[Customer][address]": {
+                    required: "Please enter address.",
+                },
+				"data[Customer][email]": {
+                    required: "Please enter email.",
+                },
+				"data[Customer][pin_code]": {
+                    required: "Please enter pin code.",
+                },
+				"data[Customer][mobile]": {
+                    required: "Please enter contact number.",
+					number:"Please enter number",
+                },
+							
+            }
+        });
+		
+		
+	$(".select_country_list").on('change focus',function() {
+	
+	var country_no=$(this).attr('country-no');
+	var id = $(this).val();	
+
+	$(".select_state_list_"+country_no).find('option').remove();
+	$('<option>').val('').text(' Select State ').appendTo($(".select_state_list_1"));			
+	if (id) {
+	var dataString = 'id='+ id;
+	$.ajax({
+		type: "POST",
+		url: '<?php echo Router::url(array("controller"=>"commons","action" => "getStates",'admin'=>false)); ?>',
+		data: dataString,
+		cache: false,
+		success: function(html) {		
+          	
+			$('.select_state_list_'+country_no).html(html.data);			
+				
+			if($( ".select_state_list_"+country_no ).hasClass( "chosen-select" ))
+			{
+				$(".select_state_list_"+country_no).trigger("chosen:updated");								
+			}			
+		} 
+	});
+	}	
+	});	
+
+$(".onchange_state").on('change focus',function() {
+	var state_no=$(this).attr('state-no');
+	var id = $(this).val();			
+	$(".select_city_list_1").find('option').remove();
+	$('<option>').val('').text(' Select City/District ').appendTo($(".select_city_list_"+state_no));			
+	if (id) {
+	var dataString = 'id='+ id;
+	$.ajax({
+		type: "POST",
+		url: '<?php echo Router::url(array("controller"=>"commons","action" => "getCities",'admin'=>false)); ?>',
+		data: dataString,
+		cache: false,
+		success: function(html) {								
+			
+			$('.select_city_list_'+state_no).html(html.data);			
+				
+			if($( ".select_city_list_"+state_no ).hasClass( "chosen-select" ))
+			{							
+				$(".select_city_list_"+state_no).trigger("chosen:updated");			
+			}		
+			
+		} 
+	});
+	}	
+	});
+	
+ /*------------------------------------------------Add Customer--------------------------------------------*/
+   $("#addCustomerForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#addCustomerForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'addCustomer'));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#AddCustomerModal').modal('hide');}, 100);
+				
+					$('#customerTable').prepend('<tr class="table_eventr" id="custRow'+data.id+'"><td id="custNameTd'+data.id+'">'+data.name+'</td><td id="companyNameTd'+data.id+'">'+data.comp_name+'</td><td id="addressNameTd'+data.id+'">'+data.address+'</td><td id="mobileNameTd'+data.id+'">'+data.mobile+'</td><td id="emailNameTd'+data.id+'">'+data.email+'</td><td><a href="javascript:void()" class="btn btn-info btn-xs" onclick="setEditCustomerdata('+data.id+')"><i class="fa fa-pencil" aria-hidden="true"></i></a><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteCustomer('+data.id+')"><i class="fa fa-times-circle" tabindex="3"></i></a></td></tr>');
+					document.getElementById("addCustomerForm").reset();
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+				 $('.alertFadeOut').fadeOut(2000, function () 
+				{
+					
+                      $('#alertFadeOut').text('');
+				});
+                   
+			}
+		});
+		}
+	}));
+	
+
+ /*------------------------------------------------Edit Customer--------------------------------------------*/
+$("#editCustomerForm").on('submit', (function(e) {
+		e.preventDefault();
+		
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'editCustomer','compadmin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#viewCustomerModal').modal('hide');}, 100);
+					
+					$('#custNameTd'+data.id).html(data.name);
+					$('#companyNameTd'+data.id).html(data.company_name);
+					$('#addressNameTd'+data.id).html(data.address);
+					$('#mobileNameTd'+data.id).html(data.mobile);
+					$('#emailNameTd'+data.id).html(data.email);
+					document.getElementById("editCustomerForm").reset();
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+				$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+				
+			}
+		});
+	}));
+	
+ /*------------------------------------------------set Customer--------------------------------------------*/
+function setEditCustomerdata(id)
+{	
+		$('#viewCustomerModal').modal('show');
+            var data = 'id=' + id ;
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'getDataByCustomer','compadmin'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 200) 
+						{	
+					
+							$('#EditCustomerId').val(data.id);
+							$('#custNameEdit').val(data.name);
+							$('#compantNameEdit').val(data.comp_name);
+							$('#addressEdit').val(data.address);
+							$('#mobileEdit').val(data.mobile);
+							$('#emailEdit').val(data.email);
+							$('#countryEdit').val(data.country);
+							$('#stateEdit').val(data.state);
+							$('#cityEdit').val(data.city);
+							$('#pinCodeEdit').val(data.pin_code);
+						
+						}
+				  }
+             });
+}
+<!-------------------------------------------------------Delete Customer------------------------------------------->
+function deleteCustomer(data_id){
+	//alert();
+	var ans= confirm("Are you sure you want to delete this Customer ?");
+        if (ans)
+        {
+            var id = data_id;
+            var data = 'id=' + id ;
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'deleteCustomer','compadmin'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 200) 
+						{	
+							$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+							$('#customerTable #custRow'+data.id).remove();
+							
+						}
+					$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+				
+					
+                   }
+             });
+        }
+}	
+
+
+</script>

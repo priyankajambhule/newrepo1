@@ -1,0 +1,712 @@
+<?php
+$this->Paginator->options(array(
+    'update' => '#LayoutContent',
+    'evalScripts' => true,
+    'before' => $this->Js->get('#busy-indicator')->effect(
+        'fadeIn',
+        array('buffer' => false)
+    ),
+    'complete' => $this->Js->get('#busy-indicator')->effect(
+        'fadeOut',
+        array('buffer' => false)
+    ),
+));
+?>
+<?php echo $this->Html->script('../plugins/chosen/chosen.jquery.min');
+ echo $this->Html->css('../plugins/chosen/chosen.min');
+
+ ?>
+<!-- Page-Title -->
+<div class="row" >
+<div class="col-sm-12">
+<h4 class="page-title">Master / Ledger</h4>
+</div>
+</div>
+	 <div class="col-sm-12" id="messageDiv">
+	  
+	  </div>	
+<div class="row">
+<div class="col-xs-12 col-lg-12 col-xl-12">
+<div class="row">
+		<div class="col-sm-8">		
+		
+		<?php echo $this->element('flash'); ?> 		 		
+		<?php 
+		echo $this->Form->create('Ledger', array(
+	    'url'=>array('controller'=>'accounts','action'=>'ledgerList','user'=>false,'ext'=>URL_EXTENSION),
+		'class' => 'form-inline search_form', 			
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('control-label'),
+		'between' => '',
+		'after' => '',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));	
+		?>	
+		<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here','label'=>false)); ?>   
+		
+		<?php
+		echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[Ledger][Search]'));
+		?>	
+		<?php
+		echo $this->Html->link('Reset',
+		array('controller' => 'accounts','action' => 'resetLedgerSearch','user'=>false,'ext'=>URL_EXTENSION),
+		array('escape'=>false,'class'=>'btn btn-info','title'=>'Reset Search'),array());			
+		?>	
+		<?php echo $this->Form->end(); 	?>		
+		</div>
+		<div class="col-sm-4 col-md-4">
+		<a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#AddLedgerModal"  data-controls-modal="AddLedgerModalModal" data-backdrop="static" data-keyboard="false" >Add Ledger</a>
+		</div>
+		</div>
+		<div class="table-responsive">		
+		<table class="table  table-fixed-head table-bordered table-sm m-b-0 report_table_font" id="tableToExcel" >
+		
+		<thead>
+		<tr>
+
+		<th><?php echo $this->Paginator->sort('Ledger.name', __('Ledger Name'), array('escape' => FALSE)); ?></th>
+		<th><?php echo $this->Paginator->sort('Ledger.opening_bal', __('Credit Op Balance'), array('escape' => FALSE)); ?></th>
+		<th><?php echo $this->Paginator->sort('Ledger.debitop_bal', __('Debit Op Balance'), array('escape' => FALSE)); ?></th>
+		<th><?php echo $this->Paginator->sort('Group.name', __('Group'), array('escape' => FALSE)); ?></th>
+		
+		<th>Action</th>
+		</tr>
+		</thead>
+		
+		<tbody id="ledgerlistTable">
+		<?php
+		if(!empty($ledgers))
+		{		
+			foreach ($ledgers as $row)
+			{                   
+		
+			?>
+			<tr id="ledgerRow<?php echo $row['Ledger']['id']; ?>">
+			<td id="ledgerNameTd<?php echo $row['Ledger']['id']; ?>"><?php echo $row['Ledger']['name']; ?></td>
+			<td id="ledgerBalTd<?php echo $row['Ledger']['id']; ?>"><?php echo $row['Ledger']['opening_bal']; ?></td>
+			<td id="ledgerDebBalTd<?php echo $row['Ledger']['id']; ?>"><?php echo $row['Ledger']['debitop_bal']; ?></td>
+			<td ><span id="ledgerGroupIDSpan<?php echo $row['Ledger']['id']; ?>" style="display:none"><?php echo $row['Group']['id']; ?></span><span id="ledgerGroupNAmeSpan<?php echo $row['Ledger']['id']; ?>"><?php echo $row['Group']['name']; ?></span></td>
+			<td>
+				<a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditLedgerdata(<?php echo $row['Ledger']['id']; ?>)"><i class="fa fa-edit"></i></a>
+				<a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deleteledger(<?php echo $row['Ledger']['id']; ?>)"><i class="fa fa-times-circle"></i></a>
+				
+			
+			</td>
+			
+			</tr>
+			
+			<?php 
+			}
+		}
+		else
+		{
+		?>
+		<tr id="noLedger">
+		<td colspan="5" align="center" >No Records</td>
+		</tr>
+		<?php
+		}
+		?>
+		</tbody>
+		</table>
+		
+		<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+	
+
+</div><!-- end col-->
+</div>
+
+
+<!---------------------------------------------Add Legder------------------------------------------------------>
+
+<div class="modal fade" id="AddLedgerModal" tabindex="-1" role="dialog" aria-labelledby="AddLedgerModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Add New Ledger</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Ledger', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addnewledgerForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+     	<div class="modal-body">
+		<div class="col-sm-12" id="messageDivModalAdd"></div>
+	    <div class="row">
+		<label class="col-sm-3 control-label">Group<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('group_id',array('type'=>'select','class'=>'form-control chosen-select','options'=>$groups,'empty'=>'Select Group','multiple'=>false,'label'=>false,'id'=>'AddLedegerGruoupId'))?>
+		<!---<div class="col-sm-2"><a href="#" class="btn btn-primary" data-toggle="modal" data-target="#AddGroupModal"  data-controls-modal="AddGroupModalModal" data-backdrop="static" data-keyboard="false" ><i class="fa fa-plus-circle" aria-hidden="true"></i></a></div>---->
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Credit Op Balance<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('opening_bal',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Debit Op Balance<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('debitop_bal',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+
+
+		<!-- vendor details field -->
+	
+		<div class="add_vendor_details">
+			<div class="row">
+				
+				<label class="col-sm-3 control-label">Address</label>
+				<?php echo $this->Form->input('address',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Mobile</label>
+				<?php echo $this->Form->input('mobile',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Email</label>
+				<?php echo $this->Form->input('email',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Contact Person</label>
+				<?php echo $this->Form->input('contact_person',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">City</label>
+				<?php echo $this->Form->input('city',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Owner</label>
+				<?php echo $this->Form->input('owner',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+			</div>
+		</div>
+		<!-- end of vendor details field -->
+
+		<!-- bank details field -->
+	
+		<div class="add_bank_details">
+			<div class="row">
+				
+				<label class="col-sm-3 control-label">Account Number<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('ac_no',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Branch<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('branch',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">IFSC code<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('ifsc',array('type'=>'text','class'=>'form-control','label'=>false)); ?>
+
+			</div>
+		</div>
+		<!-- end of bank details field -->
+			
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Add Ledger</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+<!---------------------------------------------Edit Legder------------------------------------------------------>
+<div class="modal fade" id="EditLedgerModal" tabindex="-1" role="dialog" aria-labelledby="EditLedgerModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Edit Ledger</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('Ledger', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editledgerForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+	 
+	    <div class="row">
+		<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'editLedgerid')); ?>
+			<label class="col-sm-3 control-label">Group<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('group_id',array('type'=>'select','class'=>'form-control','options'=>$groups,'empty'=>'Select Group','label'=>false,'id'=>'EditLedegerGruoupId')); ?>
+		
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','id'=>'editLedgerName','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Opening Balance<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('opening_bal',array('type'=>'text','id'=>'editLedgerOpenBal','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+		<label class="col-sm-3 control-label">Debit Op Balance<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('debitop_bal',array('type'=>'text','id'=>'editLedgerDebOpenBal','class'=>'form-control','label'=>false)); ?>
+		<div class="col-sm-12 voffset2"></div>
+		
+		<!-- vendor details field -->
+	
+		<div class="vendor_details">
+			<div class="row">
+				
+				<label class="col-sm-3 control-label">Address</label>
+				<?php echo $this->Form->input('address',array('type'=>'text','id'=>'editVendorAddress','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Mobile<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('mobile',array('type'=>'text','id'=>'editVendorMobile','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Email<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('email',array('type'=>'text','id'=>'editVendorEmail','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Contact Person</label>
+				<?php echo $this->Form->input('contact_person',array('type'=>'text','id'=>'editVendorContactPerson','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">City</label>
+				<?php echo $this->Form->input('city',array('type'=>'text','id'=>'editVendorCity','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Owner</label>
+				<?php echo $this->Form->input('owner',array('type'=>'text','id'=>'editVendorOwner','class'=>'form-control','label'=>false)); ?>
+			</div>
+		</div>
+		<!-- end vendor details field  -->
+
+		<!-- bank details field -->
+	
+		<div class="bank_details">
+			<div class="row">
+				
+				<label class="col-sm-3 control-label">Account Number<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('ac_no',array('type'=>'text','id'=>'editBankAcc_num','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">Branch<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('branch',array('type'=>'text','id'=>'editBankBranch','class'=>'form-control','label'=>false)); ?>
+
+				<div class="col-sm-12 voffset2"></div>
+				<label class="col-sm-3 control-label">IFSC code<span class="required_fields"> *</span></label>
+				<?php echo $this->Form->input('ifsc',array('type'=>'text','id'=>'editBankIFSC_num','class'=>'form-control','label'=>false)); ?>
+
+			</div>
+		</div>
+		<!-- end bank details field-->
+				
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Update Ledger</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+
+
+<?php //echo $this->Js->writeBuffer(); ?>
+<script>
+/* ----------------------------on edit select option div shown (for edit)--------------------------------------------------- */
+$('#EditLedegerGruoupId').change(function() {
+	var select_id=$(this).val();
+	var vendor_id=<?php echo GROUP_VENDOR_ID; ?>;
+	var bank_id=<?php echo GROUP_BANK_ACCOUNT_ID; ?>;
+	//	alert(bank_id);
+	if(select_id==vendor_id)
+	{
+		$('.vendor_details').show();
+		$('.bank_details').hide();
+	}
+	else if(select_id==bank_id)
+	{
+		$('.bank_details').show();
+		$('.vendor_details').hide();
+	}
+	else
+	{
+		$('.vendor_details').hide();
+		$('.bank_details').hide();
+	}
+    //    $('#' + $(this).val()).show();
+});	 
+/*-----------------------------function setEditLedgerdata(id) ------------------------------------- */
+function setEditLedgerdata(id)
+{
+	var groupId=$('#ledgerGroupIDSpan'+id).html(); 
+	$('#editLedgerid').val(id);
+	//calling to a setEditData() ajax to set the bank/vendor details field
+	var data = 'id=' + id ;
+	$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'setEditData','user'=>false));?>" ,
+			type: "POST",
+			data: data, 
+		//	contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 201) 
+				{	
+				//	alert(JSON.stringify(data));
+					//$('#editLedgerid').val(data.id);
+					$('#editLedgerName').val(data.vendor_name);
+					$('#editLedgerOpenBal').val(data.opening_bal);
+					$('#editLedgerDebOpenBal').val(data.debitop_bal);
+					$('#EditLedegerGruoupId').val(data.group_id);
+					$('#editVendorAddress').val(data.address);
+					$('#editVendorMobile').val(data.mobile);
+					$('#editVendorEmail').val(data.email);
+					$('#editVendorContactPerson').val(data.contact_person);
+					$('#editVendorCity').val(data.city);
+					$('#editVendorOwner').val(data.owner);
+			
+				}
+				else if(data.status == 202)
+				{
+				//	alert(JSON.stringify(data));
+					//$('#editLedgerid').val(data.id);
+					$('#editLedgerName').val(data.bank_name);
+					$('#editLedgerOpenBal').val(data.opening_bal);
+					$('#editLedgerDebOpenBal').val(data.debitop_bal);
+					$('#EditLedegerGruoupId').val(data.group_id);
+					$('#editBankAcc_num').val(data.ac_no);
+					$('#editBankBranch').val(data.branch);
+					$('#editBankIFSC_num').val(data.ifsc);
+				}
+				else if(data.status == 200){
+					//$('#editLedgerid').val(data.id);
+					$('#editLedgerName').val(data.name);
+					$('#editLedgerOpenBal').val(data.opening_bal);
+					$('#editLedgerDebOpenBal').val(data.debitop_bal);
+					$('#EditLedegerGruoupId').val(data.group_id);
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+				$('#EditLedgerModal').modal('show');
+				var groupId=data.group_id;
+				var vendor_id=<?php echo GROUP_VENDOR_ID; ?>;
+				var bank_id=<?php echo GROUP_BANK_ACCOUNT_ID; ?>;
+				if(groupId==vendor_id)
+				{
+					$('.vendor_details').show();
+					$('.bank_details').hide();
+				}
+				else if(groupId==bank_id)
+				{
+					$('.vendor_details').hide();
+					$('.bank_details').show();
+				}
+				else
+				{
+					$('.vendor_details').hide();
+					$('.bank_details').hide();
+				}
+			}
+		});//end of ajax
+
+	
+}
+
+
+	
+	/*----------------------------------------------------------Ledger Validations---------------------------------------------*/
+		$("#addnewledgerForm").validate({  
+		          
+            rules: {			
+				"data[Ledger][name]": {
+                    required: true,                   
+                },
+				"data[Ledger][group_id]": {
+                    required: true,                   
+                },
+				"data[Ledger][mobile]": {
+                    required: true,                   
+                },
+				"data[Ledger][email]": {
+                    required: true,                   
+                },
+				"data[Ledger][ac_no]": {
+                    required: true,                   
+                },
+				"data[Ledger][branch]": {
+                    required: true,                   
+                },
+				"data[Ledger][ifsc]": {
+                    required: true,                   
+                }
+            },
+            messages: {
+				"data[Ledger][name]": {
+                    required: "Please enter ledger name",                   
+                },
+				"data[Ledger][group_id]": {
+                    required: "Please select group",                   
+                },
+				"data[Ledger][mobile]": {
+                    required: "Please enter mobile number",                   
+                },
+				"data[Ledger][email]": {
+                    required: "Please enter email",                   
+                },
+				"data[Ledger][ac_no]": {
+                    required: "Please enter account number",                   
+                },
+				"data[Ledger][branch]": {
+                    required: "Please enter branch",                   
+                },
+				"data[Ledger][ifsc]": {
+                    required: "Please enter IFSC Code",                   
+                }
+            }
+        });
+		$("#editledgerForm").validate({  
+		          
+            rules: {			
+				"data[Ledger][name]": {
+                    required: true,                   
+                },
+				"data[Ledger][group_id]": {
+                    required: true,                   
+                },
+				"data[Ledger][mobile]": {
+                    required: true,                   
+                },
+				"data[Ledger][email]": {
+                    required: true,                   
+                },
+				"data[Ledger][ac_no]": {
+                    required: true,                   
+                },
+				"data[Ledger][branch]": {
+                    required: true,                   
+                },
+				"data[Ledger][ifsc]": {
+                    required: true,                   
+                }
+				
+            },
+            messages: {
+				"data[Ledger][name]": {
+                    required: "Please enter ledger name",                   
+                },
+				"data[Ledger][group_id]": {
+                    required: "Please select group",                   
+                },
+				"data[Ledger][mobile]": {
+                    required: "Please enter mobile number",                   
+                },
+				"data[Ledger][email]": {
+                    required: "Please enter email",                   
+                },
+				"data[Ledger][ac_no]": {
+                    required: "Please enter account number",                   
+                },
+				"data[Ledger][branch]": {
+                    required: "Please enter branch",                   
+                },
+				"data[Ledger][ifsc]": {
+                    required: "Please enter IFSC Code",                   
+                }
+            }
+        });
+
+	/* ---------------------------------------on select of select option div shown (for add)----------------------*/
+	$('.add_vendor_details').hide();
+	$('.add_bank_details').hide();
+	$('#AddLedegerGruoupId').change(function() {
+		var select_id=$(this).val();
+		var vendor_id=<?php echo GROUP_VENDOR_ID; ?>;
+		var bank_id=<?php echo GROUP_BANK_ACCOUNT_ID; ?>;
+	//	alert(bank_id);
+		if(select_id==vendor_id)
+		{
+			$('.add_vendor_details').show();
+        	$('.add_bank_details').hide();
+		}
+		else if(select_id==bank_id)
+		{
+			$('.add_bank_details').show();
+			$('.add_vendor_details').hide();
+		}
+		else
+		{
+			$('.add_vendor_details').hide();
+			$('.add_bank_details').hide();
+		}
+    //    $('#' + $(this).val()).show();
+ 	});
+		/*------------------------------------------------Add Ledger--------------------------------------------*/
+   $("#addnewledgerForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#addnewledgerForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'addLedger','user'=>false));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#AddLedgerModal').modal('hide');}, 100);
+					document.getElementById("addnewledgerForm").reset();
+					$('#ledgerlistTable').prepend('<tr id="ledgerRow'+data.id+'"><td id="ledgerNameTd'+data.id+'">'+data.name+'</td><td id="ledgerBalTd'+data.id+'">'+data.openBal+'</td><td id="ledgerDebBalTd'+data.id+'">'+data.debitop_bal+'</td><td ><span id="ledgerGroupIDSpan'+data.id+'" style="display:none">'+data.groupId+'</span><span id="ledgerGroupNAmeSpan'+data.id+'">'+data.groupName+'</span></td><td><a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditLedgerdata('+data.id+')"><i class="fa fa-edit"></i></a><a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deleteledger('+data.id+')"><i class="fa fa-times-circle"></i></a></td></tr>');
+					$('#AddLedegerGruoupId').trigger("chosen:updated");
+						$('#ledgerlistTable #noLedger').remove();
+						
+						/*Update Edit purchase category select box */	
+						$('#createPurchasePrderLedgeId').append($('<option>', {
+							value: data.id,
+							text: data.name
+							}));
+						$('#createPurchasePrderLedgeId').trigger("chosen:updated");
+						/*Update add Voucherselect box */	
+						$('#AddVoucherLedgerId').append($('<option>', {
+						value: data.id,
+						text: data.name
+						}));
+						$('#AddVoucherLedgerId').trigger("chosen:updated");
+						/*Update add Voucherselect box */	
+						$('#AddVoucherCrLedgerId').append($('<option>', {
+						value: data.id,
+						text: data.name
+						}));
+						$('#AddVoucherCrLedgerId').trigger("chosen:updated");
+				}
+				else 
+				{
+				//	var error=JSON.stringify(data.error);
+					if(data.error)
+					{
+						$("#messageDivModalAdd").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.error+'.</div>');
+					}
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+					
+				}
+			}
+		});
+		}
+	}));
+	<!-- ------------------------------------set data on edit ------------------------------ -->
+	function setEditData(edit_id,groupId){
+
+		var data= {
+					'edit_id':edit_id,
+					'group_id':groupId
+				  };
+	//	alert(data.group_id);  
+		
+	}//end 0f setEditData
+	<!-------------------------------------------------Edit Ledger--------------------------------------------> 
+   $("#editledgerForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#editledgerForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'editLedger','user'=>false));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#EditLedgerModal').modal('hide');}, 100);
+					document.getElementById("editledgerForm").reset();
+			
+					$('#ledgerNameTd'+data.id).html(data.name);
+					$('#ledgerBalTd'+data.id).html(data.openBal);
+					$('#ledgerDebBalTd'+data.id).html(data.debitop_bal);
+					$('#ledgerGroupIDSpan'+data.id).html(data.groupId);
+					$('#ledgerGroupNAmeSpan'+data.id).html(data.groupName);
+					
+					
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));	
+/*--------------------------------------------------------------Deletet Ledger--------------------------------------------*/	
+	function deleteledger(data_id){
+	var ans= confirm("Are you sure you want to delete this ledger ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id ;
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'accounts','action' => 'deleteLedger','user'=>false));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+							$('#ledgerlistTable #ledgerRow'+data.id).remove();
+							
+						}
+					
+                   }
+             });
+        }
+}	
+</script>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Ezee Society</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->	
+
+
+
+
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+<!--===============================================================================================-->
+<?php       
+	echo $this->Html->css('admin/outer/main');		
+	echo $this->Html->css('admin/outer/util');		
+	echo $this->Html->css('animsition');		
+	echo $this->Html->script('jquery-3.2.1.min');		
+	echo $this->Html->script('animsition.min');		
+	echo $this->Html->script('main');		
+	?>
+</head>
+<body>
+<?php echo $this->fetch('content'); ?>	  

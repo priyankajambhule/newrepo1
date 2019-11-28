@@ -1,0 +1,417 @@
+<?php
+echo $this->Html->script('../plugins/chosen/chosen.jquery.min');
+echo $this->Html->css('../plugins/chosen/chosen.min');
+
+$this->Paginator->options(array(
+    'update' => '#LayoutContent',
+    'evalScripts' => true,
+    'before' => $this->Js->get('#busy-indicator')->effect(
+        'fadeIn',
+        array('buffer' => false)
+    ),
+    'complete' => $this->Js->get('#busy-indicator')->effect(
+        'fadeOut',
+        array('buffer' => false)
+    ),
+));
+?>
+<!-- Page-Title -->
+<div class="row" >
+<div class="col-sm-12">
+<h4 class="page-title">Master / IdProof</h4>
+</div>
+</div>
+	<div class="col-sm-12" id="messageDiv">	  
+	</div>	
+<div class="row">
+<div class="col-xs-12 col-lg-12 col-xl-12">
+<div class="row">
+		<div class="col-sm-8">		
+		<?php echo $this->element('flash'); ?> 		 		
+		<?php 
+		echo $this->Form->create('IdProof', array(
+		'url'=>array('controller'=>'managements','action'=>'idProofList','admin'=>true,'ext'=>URL_EXTENSION),
+		'class' => 'form-inline search_form', 			
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('control-label'),
+		'between' => '',
+		'after' => '',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));	
+		?>	
+		<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here','label'=>false)); ?>   
+		
+		<?php
+		echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[State][Search]'));
+		?>	
+		<?php
+		echo $this->Html->link('Reset',
+		array('controller' => 'managements','action' => 'resetIdProofSearch','admin'=>true,'ext'=>URL_EXTENSION),
+		array('escape'=>false,'class'=>'btn btn-info','title'=>'Reset Search'),array());			
+		?>	
+		<?php echo $this->Form->end(); 	?>		
+		</div>
+		<div class="col-sm-4 col-md-4">
+		<a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#AddIdProofModal"  data-controls-modal="AddIdProofModalModal" data-backdrop="static" data-keyboard="false" >Add IdProof</a>
+		</div>
+		</div>
+		<div class="table-responsive">		
+		<table class="table  table-fixed-head table-bordered table-sm m-b-0 report_table_font" id="tableToExcel" >
+		<thead>
+		<tr>
+		<th class="text-white">Sr No</th>
+		<th><?php echo $this->Paginator->sort('IdProof.name', __('IdProof Name'), array('escape' => FALSE)); ?></th>
+		
+		<th class="text-white">Action</th>
+		</tr>
+		</thead>
+		
+		<tbody id="IdProofTable">
+		<?php
+		if(!empty($ids))
+		{
+	
+		$i=1;
+		foreach ($ids as $row)
+		{                   
+	
+		?>
+		<tr id="idRow<?php echo $row['IdProof']['id']; ?>">
+		<td><?php echo $i; ?></td>
+		<td id="idNameTd<?php echo $row['IdProof']['id']; ?>"><?php echo ucfirst(strtoupper($row['IdProof']['name'])); ?></td>
+		
+		
+		<td>
+			<a href="javascript:void()" class="btn btn-xs btn-info" onclick="setEditIdProofdata(<?php echo $row['IdProof']['id']; ?>,'IdProof')"><i class="fa fa-edit"></i></a>
+			
+			<a href="javascript:void()" class="btn btn-xs btn-danger " onclick="deleteIdProof(<?php echo $row['IdProof']['id']; ?>)"><i class="fa fa-times-circle"></i></a>
+			
+
+		</td>
+		</tr>
+		
+		<?php 
+			$i++;
+		
+		}		
+		?>
+		<tr style="display:none;"><td  id="SrNo"><?php echo $i;?><td></tr>
+		<?php
+		} 
+		else
+		{
+		?>
+		<tr>
+		<td colspan="4" align="center">No Records</td>
+		</tr>
+		<?php
+		}
+		?>
+		</tbody>
+		</table>
+		
+		<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+	
+
+</div><!-- end col-->
+</div>
+
+<!---------------------------------------------Add IdProof----------------------------------------------------->
+<div class="modal fade" id="AddIdProofModal" tabindex="-1" role="dialog" aria-labelledby="AddIdProofModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Add New IdProof</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('IdProof', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addIdProofForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+	 
+	    <div class="row">
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','class'=>'form-control','label'=>false)); ?>	
+		<div class="col-sm-12 voffset2"></div>
+		
+			
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Add IdProof</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+
+
+<!--------------------Edit IdProof------------------->
+<div class="modal fade" id="EditIdProofModal" tabindex="-1" role="dialog" aria-labelledby="EditIdProofModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Edit IdProof</h4>
+		
+      </div>
+		<?php 
+		echo $this->Form->create('IdProof', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editIdProofForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		'inputDefaults' => array(
+		'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+		'div' => array('class' => 'form-group'),
+		'class' => array('form-control'),
+		'label' => array('class'=>'col-sm-5 control-label'),
+		'between' => '<div class="col-sm-7">',
+		'after' => '</div>',
+		'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+		)));			
+		?>	
+      <div class="modal-body">
+	   <div class="row">
+		<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'EditIdProofId')); ?>
+		<label class="col-sm-3 control-label">Name<span class="required_fields"> *</span></label>	
+		<?php echo $this->Form->input('name',array('type'=>'text','id'=>'EditIdProofNameId','class'=>'form-control','label'=>false)); ?>	
+					<div class="col-sm-12 voffset2"></div>
+			
+      </div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-info pull-right">Update IdProof</button>
+		
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+    </div>
+  </div>
+</div>
+
+
+<?php echo $this->Html->script('../plugins/fixed_table/jquery.michiweber.table-head-fixed');?>
+<?php echo $this->Js->writeBuffer(); ?>
+<script>
+	
+$("#addIdProofForm").validate({
+		          
+            rules: {			
+				"data[IdProof][name]": {
+                    required: true,    
+						remote: {
+								url: "<?php echo $this->webroot.'commons/unique_modalOrId/IdProof/name'?>",
+								type: "post",
+							} 		
+                },	
+				
+			
+            },
+            messages: {
+				"data[IdProof][name]": {
+                    required: "Please enter name",                     
+                    remote: "Name already exist",                     
+                },
+							
+            }
+        });
+
+			
+$("#editIdProofForm").validate({
+		          
+            rules: {			
+				"data[IdProof][name]": {
+                    required: true,    
+						remote: {
+								url: "<?php echo $this->webroot.'commons/unique_modalOrId/IdProof/name'?>",
+								type: "post",
+							} 		
+                },	
+				
+			
+            },
+            messages: {
+				"data[StoreItem][name]": {
+                    required: "Please enter name",                     
+                    remote: "Name already exist",                     
+                },
+							
+            }
+        });
+
+ /*------------------------------------------------Add IdProof--------------------------------------------*/
+   $("#addIdProofForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#addIdProofForm').valid()==true)
+		{		
+			var srNo = $('#SrNo').html();
+		
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'managements','action' => 'addIdProof','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#AddIdProofModal').modal('hide');}, 100);
+					document.getElementById("addIdProofForm").reset();
+					
+					
+					$('#IdProofTable').append('<tr class="table_eventr" id="idRow'+data.id+'"><td>'+srNo+'</td><td id="idNameTd'+data.id+'">'+data.name+'</td><td><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteIdProof('+data.id+')"><i class="fa fa-times-circle" tabindex="3"></i></a><a href="javascript:void()" class="btn btn-info btn-xs" onclick="setEditIdProofdata('+data.id+')"><i class="fa fa-pencil" aria-hidden="true"></i></a></td></tr>');
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+				  $('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+                   
+			}
+		});
+		}
+	}));
+
+
+$("#editIdProofForm").on('submit', (function(e) {
+		e.preventDefault();
+		
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'managements','action' => 'editIdProof','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+			success: function(data)
+			{
+				if (data.status == 200) 
+				{	
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#EditIdProofModal').modal('hide');}, 100);
+					document.getElementById("editIdProofForm").reset();
+					$('#idNameTd'+data.id).html(data.name);
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alertFadeOut alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+				$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+				
+			}
+		});
+	}));
+	
+
+function setEditIdProofdata(id,model)
+{	
+            var data = 'id=' + id+'&model='+model ;
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'managements','action' => 'getDataSetDataID','admin'=>false));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 200) 
+						{	
+							$('#EditIdProofId').val(data.mydata['IdProof']['id']);
+							$('#EditIdProofNameId').val(data.mydata['IdProof']['name']);
+							
+							
+							
+							
+							
+						}
+					
+                  
+				  }
+             });
+
+	
+	$('#EditIdProofModal').modal('show');
+}
+<!-------------------------------------------------------Delete IdProof------------------------------------------->
+function deleteIdProof(data_id){
+	//alert();
+	var ans= confirm("Are you sure you want to delete this IdProof ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id ;
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'managements','action' => 'deleteIdProof','admin'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 200) 
+						{	
+							$("#messageDiv").html('<div class="alertFadeOut alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+							$('#IdProofTable #idRow'+data.id).remove();
+							
+						}
+					$('.alertFadeOut').fadeOut(2000, function () 
+					{
+                      $('#alertFadeOut').text('');
+					});
+				
+					
+                   }
+             });
+        }
+}	
+
+
+</script>

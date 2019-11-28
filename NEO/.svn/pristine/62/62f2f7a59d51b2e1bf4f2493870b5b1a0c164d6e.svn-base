@@ -1,0 +1,696 @@
+<?php
+/**
+ * Static content controller.
+ *
+ * This file will render views from views/pages/
+ *
+ * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @link          http://cakephp.org CakePHP(tm) Project
+ * @package       app.Controller
+ * @since         CakePHP(tm) v 0.2.9
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ */
+
+App::uses('AppController', 'Controller');
+App::uses('AuthComponent', 'Controller/Component');
+/**
+ * Static content controller
+ *
+ * Override this controller by placing a copy in controllers directory of an application
+ *
+ * @package       app.Controller
+ * @link http://book.cakephp.org/2.0/en/controllers/pages-controller.html
+ */
+
+class CommonsController extends AppController {
+
+/**
+ * This controller does not use a model
+ *
+ * @var array
+ */
+ 	
+    public $helpers = array(
+        'Date','Jqimageresize'//helper for accessing auth user
+    );
+    public $uses = array(
+        'SiteContent'
+    );
+	
+	public $components = array('Paginator','Files','Img','PaymentDue');
+	
+	public function beforeFilter() 
+	{
+        parent::beforeFilter();
+        $this->Auth->allow('sort_array_of_array','getStates','getDistricts','getCities','autoSugestSocietyByname','getSocietyDataByID','getFlats','getDueByFlatORWing');
+    }	
+	
+	/*
+	@ Mohammad Masood 
+	@ Get List of States of selected country
+	@ 25-05-2016
+	*/
+	public function getStates() {
+	
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+        if ($this->request->is('ajax')) 
+		{		
+			$this->loadModel('State');
+			$states = array();
+			if (isset($this->request['data']['id'])) 
+			{
+				$states = $this->State->find('list', array(
+					'fields' => array('id','name'),
+					'conditions' => array(
+					'State.country_id' => $this->request['data']['id'],
+					'State.is_deleted' => BOOL_FALSE,
+					'State.is_active' => BOOL_TRUE,					
+					),
+					'order'=>array('State.name'=>'ASC')
+				));
+				$str='<option value="">Select State</option>';
+				foreach($states as $k=>$v)
+				{
+					$str.='<option value="'.$k.'">'.$v.'</option>';
+				}
+				header('Content-Type: application/json');
+				echo json_encode(array('data'=>$str));
+				exit();
+			}			
+		}			
+	}
+	
+	
+	/*
+	@ Mohammad Masood 
+	@ Get List of Districts on selecting state
+	@ 25-05-2016
+	*/
+	public function getDistricts() {
+		
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+        if ($this->request->is('ajax')) 
+		{		
+			$this->loadModel('City');
+			$cities = array();
+			if (isset($this->request['data']['id'])) 
+			{
+				$cities = $this->City->find('list', array(
+					'fields' => array('id','name'),
+					'conditions' => array(
+					'City.state_id' => $this->request['data']['id'],
+					'City.is_district' => BOOL_TRUE,		
+					'City.is_deleted' => BOOL_FALSE,
+					'City.is_active' => BOOL_TRUE,					
+					),
+					'order'=>array('City.name'=>'ASC')
+				));
+				$str='<option value="">Select District</option>';
+				foreach($cities as $k=>$v)
+				{
+					$str.='<option value="'.$k.'">'.$v.'</option>';
+				}
+				header('Content-Type: application/json');
+				echo json_encode(array('data'=>$str));
+				exit();
+			}			
+		}			
+	}	
+	
+	/*
+	@ Mohammad Masood 
+	@ Get List of Cities on selecting state
+	@ 25-05-2016
+	*/
+	public function getCities() {
+	
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+        if ($this->request->is('ajax')) 
+		{		
+			$this->loadModel('City');
+			$cities = array();
+			if (isset($this->request['data']['id'])) 
+			{
+				$cities = $this->City->find('list', array(
+					'fields' => array('id','name'),
+					'conditions' => array(
+					'City.state_id' => $this->request['data']['id'],
+					'City.is_deleted' => BOOL_FALSE,
+					'City.is_active' => BOOL_TRUE,					
+					),
+					'order'=>array('City.name'=>'ASC')
+				));
+				
+				$str='<option value="">Select City</option>';
+				foreach($cities as $k=>$v){
+					$str.='<option value="'.$k.'">'.$v.'</option>';
+				}
+				
+				header('Content-Type: application/json');
+				echo json_encode(array('data'=>$str));
+				exit();				
+			}			
+		}			
+	}	
+	/*
+	Amit Sahu
+	12.03.18
+	Select Flat
+	*/
+	public function getFlats() {
+		
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+        if ($this->request->is('ajax')) 
+		{		
+			$this->loadModel('Flat');
+			$flats = array();
+			if (isset($this->request['data']['id'])) 
+			{
+				
+				$flats = $this->Flat->find('list', array(
+					'fields' => array('id','name'),
+					'conditions' => array(
+					'Flat.wing_id' => $this->request['data']['id'],	
+					'Flat.is_deleted' => BOOL_FALSE,
+					'Flat.is_active' => BOOL_TRUE,					
+					),
+					'order'=>array('Flat.name'=>'ASC')
+				));
+				$str='<option value="">Select Flat</option>';
+				foreach($flats as $k=>$v)
+				{
+					$str.='<option value="'.$k.'">'.$v.'</option>';
+				}
+				header('Content-Type: application/json');
+				echo json_encode(array('data'=>$str));
+				exit();
+			}			
+		}			
+	}
+	/*
+	Amit Sahu
+	Enque email
+	
+	*/
+	
+	public function admin_unique_email()
+	{		
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+		$this->loadModel('User');
+		
+        if ($this->request->is('ajax')) 
+		{
+			
+			$count=$this->User->find('count',array(
+			'conditions'=>array(
+				'User.email'=>$this->request->data['User']['email'],
+				'User.is_deleted'=>BOOL_FALSE
+				)				
+			));
+			
+			if($count > 0)
+			{
+				echo 'false';
+			}
+			else
+			{
+				echo 'true';			
+			}		
+			
+		}
+	}
+	
+	/*
+	Amit Sahu
+	26.02.18
+	Get data by modal or id
+	*/
+	public function getDataByModalOrId() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+		$this->admin_check_login();		
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$model= $this->request->data['model'];
+				$this->loadModel($model);
+				
+				$mydata=$this->$model->findById($id);	
+			   if (!empty($mydata)) 
+			   {
+					
+				echo json_encode(array('status'=>'1000','mydata'=>$mydata));
+			   }else{
+				   echo json_encode(array('status'=>'1001','mydata'=>''));
+			   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+	Amit Sahu
+	Delete Country/State/District
+	28.06.17
+	*/
+	public function deleteByModalOrId() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+		//$this->admin_check_login();		
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$model= $this->request->data['model'];
+				$this->loadModel($model);
+				$this->$model->id =$id;
+				if (!$this->$model->exists()) 
+				{
+					throw new NotFoundException('Invalid '.$model);
+				}
+									
+							   if ($this->$model->saveField('is_deleted',BOOL_TRUE)) 
+							   {
+									$this->$model->saveField('is_active',BOOL_FALSE);
+								echo json_encode(array('status'=>'1000','id'=>$id));
+							   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+	Amit Sahu
+	03.03.18
+	Reset Serch by sesioon 
+	*/	
+	public function resetCountrySearchBySession($session=NULL) 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		//$this->admin_check_login();		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{			
+			$this->Session->delete($session);
+			$this->redirect($this->referer());	
+			
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}		
+		
+    }
+	/*
+	Amit Shau
+	Auto Sugest Societ
+	07.02.18
+	*/
+	
+	public function autoSugestSocietyByname()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('Society');
+		
+		
+		if ($this->request->is('ajax')) 
+			{
+				
+		
+			$query=trim($this->request->data['value']);
+			$no=trim($this->request->data['no']);
+			
+			
+		
+			if(isset($query) and !empty($query))
+			{
+				$or_cond = array(
+					'Society.name LIKE'=>'%'.$query.'%',
+					
+				);
+				
+				/*$or_cond['OR']['Student.name LIKE'] =$query.'%';
+				$or_cond['OR']['Student.reg_code LIKE'] =$query.'%';*/
+				
+				 //$acdamyYearData=$this->Session->read('activeYear');
+				$sopcities=$this->Society->find('all',array(
+					"fields"=>array("Society.id","Society.name"),
+					'conditions'=>array(
+					"OR"=>$or_cond,
+					'Society.id !='=>BOOL_FALSE,
+					'Society.is_deleted'=>BOOL_FALSE,
+					'Society.is_active'=>BOOL_TRUE,									
+									
+					),
+					
+					"recursive"=>-1,
+					'limit'=>15,
+					'order'=>array('Society.id'=>'ASC')
+					));						
+					
+			
+				$table="";
+				if(!empty($sopcities))
+				{
+					foreach($sopcities as $row)
+					{
+						$id="'".$row['Society']['id']."'";
+						
+						$table.='<tr onClick="onselectItem('.$id.','.$no.')" id-no="'.$row['Society']['id'].','.$no.'"><td><input type="text" class="hidden_input_row"><img src="'.$this->webroot.'images/build_icon_orange.png" style="width:25px;height:20px;padding-right:10px;">'.$row['Society']['name'].'</td></tr>';
+						$lastId=$row['Society']['id'];
+					}
+				
+					echo json_encode(array('table'=>$table,'status'=>1000,'lastId'=>$lastId));
+				}
+				else
+				{
+					echo json_encode(array('table'=>'','status'=>1001,'lastId'=>''));
+				}
+			}
+			
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	/*
+	Amit Sahu
+	07.02.18
+	Onselect get society data
+	*/
+	public function getSocietyDataByID() 
+	{
+		
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+		$this->loadModel('Society');
+		
+        if ($this->request->is('ajax')) 
+		{
+			if(!empty($this->request->data["id"])){
+				
+				$id = $this->request->data["id"];
+				
+				$society = $this->Society->find("first",array(
+				"conditions" =>array(
+					"Society.id"=>$id,
+					"Society.is_active"=>BOOL_TRUE,
+					"Society.is_deleted"=>BOOL_FALSE,
+				),
+				"recursive"=> 1,
+				
+				));
+				
+				if(!empty($society)){
+				
+					echo json_encode(array("status"=>200,"content"=>$society["Society"],));
+				}
+				else{
+					echo json_encode(array("status"=>404,"content"=>"Society not found"));
+				}
+				
+			}
+			 
+		}	
+	} 
+	/*
+	Amit Sahu
+	14.03.18
+	Get Due by flat id 
+	*/
+	public function getDueByFlatORWing() 
+	{
+		
+		$this->autoRender = FALSE;
+        $this->layout = 'ajax';
+		$this->loadModel('PaymentTransaction');
+		$this->loadModel('Flat');
+		
+        if ($this->request->is('ajax')) 
+		{
+			
+				
+				$flat_id = $this->request->data["flat_id"];
+				$flatData=$this->Flat->findById($flat_id);
+				if(!empty($flatData))
+				{
+					$wing_id = $this->request->data["wing_id"];
+					$society_id=$flatData['Flat']['society_id'];
+					$date1=date('Y-m-d',strtotime($flatData['Society']['created']));
+					$date2=date('Y-m-d');
+					$dues=$this->PaymentDue->getDue($society_id,$flat_id,$date1,$date2);
+					
+					$due_table="";
+			
+					if(!empty($dues)){
+						if(!empty($dues))
+							{
+								$i=0;
+								foreach($dues as $due)
+								{
+									$i++;
+									$due_table.='<tr>
+										<td><input type="checkbox" class="recpayment_ch_select" id="dueAmtPayNow_'.$i.'" name="isCheDue['.$i.']"><input type="hidden" name="dueMontharr['.$i.']" value="'.$due['month'].'"><input type="hidden" name="dueAmountarr['.$i.']" value="'.$due['amount'].'">
+										<input type="hidden" name="incomeIdarr['.$i.']" value="'.$due['income_id'].'"></td>
+										<td >'.$due['name'].'for the month of '.date('M-Y',strtotime($due['month'])).'</td>
+										<td id="dueAmt_'.$i.'">'. $due['amount'] .'</td>
+										<td>'.$due['due_days'].'-'.date('m-Y',strtotime($due['month'])).'</td>
+									</tr>';
+									
+								}
+							}
+						
+						echo json_encode(array("status"=>1000,"due_table"=>$due_table));
+					}
+					else{
+						echo json_encode(array("status"=>1001,"message"=>"No Dues"));
+					}
+				
+				}else{
+					echo json_encode(array("status"=>1001,"message"=>"Flat counld not be register"));
+				}
+			}
+
+	} 
+	
+	public function insertComplaintComent()
+	{		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('ComplaintComent');
+
+
+		
+		
+		if ($this->request->is('ajax')) 
+			{
+				
+				$user_id=$this->Session->read('Auth.User.id');
+				$this->request->data['ComplaintComent']['complaint_id']=$this->request->data['complaint_id'];
+				$this->request->data['ComplaintComent']['coment']=$this->request->data['coment'];
+				$this->request->data['ComplaintComent']['user_id']=$user_id;
+
+				
+				if ($this->ComplaintComent->save($this->request->data['ComplaintComent'])) 
+				{
+					$coment=$this->request->data['ComplaintComent']['coment'];
+				
+					$id=$this->ComplaintComent->getInsertID();
+					$date=date('d-m-Y h:i:s');
+					echo json_encode(array('status'=>'1000','date'=>$date,'coment'=>$coment,'id'=>$id));
+				} 
+				else 
+				{
+					
+					echo json_encode(array('status'=>'1001'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+    }
+	public function getComplaintDataById() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+	
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+		
+				$this->loadModel('Complaint');
+				
+				$mydata=$this->Complaint->find('first',array('conditions'=>array('Complaint.id'=>$id),'recursive'=>2));	
+			   if (!empty($mydata)) 
+			   {
+					
+				echo json_encode(array('status'=>'1000','mydata'=>$mydata));
+			   }else{
+				   echo json_encode(array('status'=>'1001','mydata'=>''));
+			   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	
+	
+	public function getComplaintCommentAuto() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+	
+		if ($this->request->is('ajax')) 
+			{
+				$complaint_id= $this->request->data['complaint_id'];
+				$last_id= $this->request->data['last_id'];
+		
+				$this->loadModel('ComplaintComent');
+				
+				$mydata=$this->ComplaintComent->find('all',array('conditions'=>array('ComplaintComent.id >'=>$last_id,'ComplaintComent.complaint_id'=>$complaint_id),'recursive'=>2));	
+			
+				
+			   if (!empty($mydata)) 
+			   {
+					
+				echo json_encode(array('status'=>'1000','mydata'=>$mydata));
+			   }else{
+				   echo json_encode(array('status'=>'1001','mydata'=>''));
+			   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+	Amit Sahu
+	Get coment for multiple complaint_id
+	22.03.18*/
+	public function getComplaintCommentAutoMultiple() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+	
+		if ($this->request->is('ajax')) 
+			{
+				
+				$last_id= $this->request->data['last_id'];
+				$user_id=$this->Session->read('Auth.User.id');
+				$this->loadModel('ComplaintComent');
+				
+				$mydata=$this->ComplaintComent->find('all',array('conditions'=>array('ComplaintComent.id >'=>$last_id,'Complaint.user_id'=>$user_id),'recursive'=>2));	
+			
+				
+			   if (!empty($mydata)) 
+			   {
+					
+				echo json_encode(array('status'=>'1000','mydata'=>$mydata));
+			   }else{
+				   echo json_encode(array('status'=>'1001','mydata'=>''));
+			   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+	Amit Sahu
+	View Notice
+	20.02.18
+	*/
+	public function viewNotice()
+	{
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('Notice');
+	
+		
+		if ($this->request->is('ajax')) 
+			{
+				
+				$id = $this->request->data['id'];	
+				$user_id=$this->Session->read('Auth.User.id');				
+				
+				$noticedata=$this->Notice->findById($id);
+				if(!empty($noticedata))
+				{
+					
+					$readers=$noticedata['Notice']['readers_id'];
+					
+					if(!empty($readers))
+					{
+						$readersArr=explode(',',$readers);
+						if(!in_array($user_id,$readersArr))
+						{
+							$this->request->data['Notice']['id']=$noticedata['Notice']['id'];
+							$this->request->data['Notice']['readers_id']=$noticedata['Notice']['readers_id'].','.$user_id;
+							$this->Notice->save($this->request->data['Notice']);
+						}
+					}else{
+						$this->request->data['Notice']['id']=$noticedata['Notice']['id'];
+							$this->request->data['Notice']['readers_id']=$user_id;
+							$this->Notice->save($this->request->data['Notice']);
+					}
+					$notice_no=$noticedata['Notice']['notice_no'];
+					$date=date('d-m-Y',strtotime($noticedata['Notice']['date']));
+					$subject=ucwords(strtolower($noticedata['Notice']['subject']));
+					$notice=$noticedata['Notice']['notice'];
+					
+					echo json_encode(array('status'=>'1000','id'=>$id,'notice_no'=>$notice_no,'date'=>$date,'subject'=>$subject,'notice'=>$notice));
+				}
+				else 
+				{
+					echo json_encode(array('status'=>'1001'));
+				}
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+			$this->redirect($this->referer());
+		}			
+	}
+	
+}

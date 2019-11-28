@@ -1,0 +1,702 @@
+<?php
+
+/**
+ * This file contain admin functionality  
+ *  
+ *
+ * PHP version 5
+ *
+ * LICENSE: This source file is subject to version 3.01 of the PHP license
+ * that is available through the world-wide-web at the following URI:
+ * http://www.php.net/license/3_01.txt.  If you did not receive a copy of
+ * the PHP License and are unable to obtain it through the web, please
+ * send a note to license@php.net so we can mail you a copy immediately.
+ * 
+ * @name       ManagementController.php
+ * @class      ManagementController
+ * @category   Users
+ * @package    Users
+ * @date       27 Jan 2014   
+ */
+ 
+App::uses('AppController', 'Controller');
+App::uses('CakeEmail', 'Network/Email');
+class ManagementsController extends AppController 
+{
+  
+   
+    public $components = array('Paginator','Files','Img');
+
+	
+	
+	 
+     
+    public function beforeFilter() {
+        parent::beforeFilter();
+        $authAllowedActions = array('admin_login');
+        $this->Auth->allow($authAllowedActions);
+        
+		$this->Auth->allow('register', 'recover', 'verify');
+        
+		
+		if (!in_array($this->Auth->user('role_id'), array(ADMIN_ROLE_ID))) {
+            $this->Auth->logout();
+        }
+
+        //set layout based on user session
+        if ($this->Auth->user()) {
+            $this->layout = 'admin/inner';
+        } else {
+            $this->layout = 'admin/outer';
+        }
+    }
+	
+	/*********************************************login******************************************/
+	
+    //function for admin login   
+    public function admin_login() {
+        $this->layout = 'admin/outer';
+		
+        if ($this->request->is('post')) {
+            $email = !empty($this->request->data ['User'] ['email']) ? trim($this->request->data ['User'] ['email']) : null;
+           $password = !empty($this->request->data ['User'] ['password']) ? trim(AuthComponent::password($this->request->data['User']['password'])) : null;
+			
+            $type = 'first';
+            $conditions = array(
+                'User.email' => $email,
+                'User.password' => $password,
+                'User.role_id' => array(ADMIN_ROLE_ID),
+                'User.is_active' => BOOL_TRUE,
+                'User.is_deleted' => BOOL_FALSE
+            );
+            $fields = NULL;
+            $contain = NULL;
+            $order = NULL;
+            $group = NULL;
+            $recursive = 1;
+            $this->loadModel('User');
+            $userData = $this->User->getUserData($type, $conditions, $fields, $contain, $order, $group, $recursive);
+
+            #get the user information
+            if (!empty($userData)) {
+			
+                $userArray['User']['email'] = $email;
+                $userArray['User']['password'] = $password;
+                if ($this->Auth->login()) {
+						
+                    $this->User->id = $this->Session->read('Auth.User.id');
+                    //update below flag
+                    $saveableArray = array(
+                        'is_logged_in' => 1,
+                        'last_login' => date('Y-m-d H:i:s'),
+                        'ip_address' => trim($this->request->clientIp())
+                    );
+                    $this->User->save($saveableArray);
+					
+                    $this->redirect($this->Auth->redirectUrl());
+                }
+				
+            } else {
+                $this->Session->setFlash(__("Invalid email address or password"), 'error');
+            }
+        }
+    }
+
+
+/**************************************************logout***********************************************/
+	
+    //function for admin logout
+    public function admin_logout() {
+        if ($this->Auth->user('id')) {
+            $this->loadModel('User');
+            $this->User->id = $this->Auth->user('id');
+            if ($this->User->saveField('is_logged_in', 0)) {
+                $this->Session->destroy('Auth.User');
+                $this->redirect($this->Auth->logout());
+            }
+        } else {
+            $this->redirect($this->Auth->logout());
+        }
+    }
+
+/**************************************password**************************************************/
+
+  
+     //function for TMIC forgot password
+    public function admin_forgotPassword() {
+
+        if ($this->request->is('post')) {
+            if ($this->request->data) {				
+                $data = !empty($this->request->data ['User'] ['email']) ? trim($this->request->data ['User'] ['email']) : null;
+              //  echo print_r($data);exit;
+				$type = 'first';
+                $conditions = array(
+                    'User.email' => $data,
+                    'User.role_id' => array(ADMIN_ROLE_ID),
+                    'User.is_active' => BOOL_TRUE,
+                    'User.is_deleted' => BOOL_FALSE
+                );
+                $fields = array(
+                    'User.id',
+                    'User.email',
+                    'User.name'
+                );
+                $contain = null;
+                $order = null;
+                $group = null;
+                $recursive = '1';
+                $this->loadModel('User');
+                $userData = $this->User->getUserData($type, $conditions, $fields, $contain, $order, $group, $recursive);
+				
+                if (!empty($userData)) {
+                    					
+					$randompassword=$this->admin_generateRandomString(8);	
+					
+					$enc_pass=!empty($randompassword) ? trim(AuthComponent::password($randompassword)) : null;									
+					//echo print_r($userData);exit;
+					
+					$username=$userData['User']['name'];
+					$email_id=$userData['User']['email'];
+					//$subject=$userData['subject'];
+					//$message=$data['message'];
+					$password = $randompassword;
+					$to_email='mayurichaudhari12492@gmail.com';
+					//echo print_r($to_email);exit;
+					
+					$templateId = EMAIL_TEMPLATE_ID;
+					$emailData ['receiver_email'] = !empty($to_email) ? trim($to_email) : NULL;
+					$emailData ['sender_email'] = !empty($email_id) ? trim($email_id) : NULL;
+					
+					    $siteLink = 'http://' . $_SERVER ['HTTP_HOST'];
+						$this->SiteSetting = ClassRegistry::init('SiteSetting');
+						$siteName = $this->SiteSetting->getSettingValue('site_name');
+						$loginLink = $siteLink . "/testingserver/managements/login";
+						$loginLinkName = 'Login';
+                        
+						$this->SiteSetting = ClassRegistry::init('SiteSetting');
+						$siteName = $this->SiteSetting->getSettingValue('site_name');
+						$senderEmail = $this->SiteSetting->getSettingValue('site_email');
+					
+					$emailData ['NAME'] = !empty($username) ? trim($username) : NULL;
+						$emailData ['EMAIL'] = !empty($email_id) ? trim($email_id) : NULL;
+						$emailData['PASSWORD'] = !empty($password) ? trim($password) : NULL;
+						$emailData ['LINK'] = !empty($loginLink) ? trim($loginLink) : NULL;
+					  //echo print_r($emailData);exit;
+					    $emailResult = $this->Email->forgetPasswordEmail($templateId, $emailData);
+						//echo print_r($emailResult);exit;
+					$sent=1;
+                    if ($sent) 
+					{
+						$this->request->data['User']['password']= $randompassword;
+						$this->User->id = $userData['User']['id'];
+						
+				  		if($this->User->save($this->data))
+						{
+	
+							unset($this->request->data);
+							$this->Session->setFlash(__('New password has been sent to your registered email '),'default',array('class'=>'alert alert-success'),'email_success');				
+							return $this->redirect(array('action' => 'forgotPassword'));
+							
+						}
+                    }
+					else 
+					{
+                        $this->Session->setFlash(__('Request could not be processed, please try again'), 'error');           }
+                } else {
+                    
+					unset($this->request->data);
+					$this->Session->setFlash(__('The email you have entered is not registered.Please enter a registered email.'),'default',array('class'=>'alert alert-danger'),'email_error');								
+					return $this->redirect(array('action' => 'forgotPassword'));
+					
+                    
+                }
+				
+            }
+        }
+    }
+
+/*********************************************************************/	
+	/*
+	@ Mohammad Masood
+	@ admin_generateRandomString($length)
+	@ retun string with specified length
+	@ For generating a random password
+	@ 04-05-2016
+	*/
+	function admin_generateRandomString($length = 8) 
+	{
+		$characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+		$charactersLength = strlen($characters);
+		$randomString = '';
+		for ($i = 0; $i < $length; $i++) {
+			$randomString .= $characters[rand(0, $charactersLength - 1)];
+		}
+		return $randomString;
+	}
+    
+
+	
+/*************************************************************************/	
+	
+	/*public function admin_resetPassword() {
+}*/
+
+function reset_password_token($reset_password_token = null) {
+        if (empty($this->data)) {
+            $this->data = $this->User->findByResetPasswordToken($reset_password_token);
+            if (!empty($this->data['User']['reset_password_token']) && !empty($this->data['User']['token_created_at']) &&
+            $this->__validToken($this->data['User']['token_created_at'])) {
+                $this->data['User']['id'] = null;
+                $_SESSION['token'] = $reset_password_token;
+            } else {
+                $this->Session->setflash('The password reset request has either expired or is invalid.');
+                $this->redirect('/users/login');
+            }
+        } else {
+            if ($this->data['User']['reset_password_token'] != $_SESSION['token']) {
+                $this->Session->setflash('The password reset request has either expired or is invalid.');
+                $this->redirect('/users/login');
+            }
+
+            $user = $this->User->findByResetPasswordToken($this->data['User']['reset_password_token']);
+            $this->User->id = $user['User']['id'];
+
+            if ($this->User->save($this->data, array('validate' => 'only'))) {
+                $this->data['User']['reset_password_token'] = $this->data['User']['token_created_at'] = null;
+                if ($this->User->save($this->data) && $this->__sendPasswordChangedEmail($user['User']['id'])) {
+                    unset($_SESSION['token']);
+                    $this->Session->setflash('Your password was changed successfully. Please login to continue.');
+                    $this->redirect('/users/login');
+                }
+            }
+        }
+    }
+	
+	/**
+     * Generate a unique hash / token.
+     * @param Object User
+     * @return Object User
+     */
+	
+	function __generatePasswordToken($user) {
+        if (empty($user)) {
+            return null;
+        }
+
+        // Generate a random string 100 chars in length.
+        $token = "";
+        for ($i = 0; $i < 100; $i++) {
+            $d = rand(1, 100000) % 2;
+            $d ? $token .= chr(rand(33,79)) : $token .= chr(rand(80,126));
+        }
+
+        (rand(1, 100000) % 2) ? $token = strrev($token) : $token = $token;
+
+        // Generate hash of random string
+        $hash = Security::hash($token, 'sha256', true);;
+        for ($i = 0; $i < 20; $i++) {
+            $hash = Security::hash($hash, 'sha256', true);
+        }
+
+        $user['User']['reset_password_token'] = $hash;
+        $user['User']['token_created_at']     = date('Y-m-d H:i:s');		
+        return $user;
+    }
+	
+	/**
+     * Validate token created at time.
+     * @param String $token_created_at
+     * @return Boolean
+     */
+    function __validToken($token_created_at) {
+        $expired = strtotime($token_created_at) + 86400;
+        $time = strtotime("now");
+        if ($time < $expired) {
+            return true;
+        }
+        return false;
+    }
+	
+    /**
+     * Sends password reset email to user's email address.
+     * @param $id
+     * @return
+     */
+    function __sendForgotPasswordEmail($id = null) {
+        if (!empty($id)) {
+            $this->User->id = $id;
+            $User = $this->User->read();
+			$this->set('User', $User);
+			
+			$Email = new CakeEmail();
+			$Email->config('default');	
+			$Email->from(array('me@example.com' => 'My Site'));
+			//$Email->to($User['User']['email']);
+			$Email->to('mohammadmasood01@gmail.com');
+			$Email->subject('Password Reset Request - DO NOT REPLY');   
+			$Email->send('This is my message');
+			
+			//if($sent)
+			//{
+               return true;
+			//}
+        }
+        return false;
+    }
+	/*
+	Amit Shau
+	Get latlong
+	26.02.18
+	*/
+ public function admin_getLatLong($address)
+	{
+		//$this->autoRender = FALSE;
+	  $this->loadModel('User');
+		
+		if(!empty($address)){
+			//Formatted address
+			$formattedAddr = str_replace(' ','+',$address);
+			//Send request and receive json data by address
+			$geocodeFromAddr = file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?address='.$formattedAddr.'&sensor=false'); 
+			$output = json_decode($geocodeFromAddr);
+			//Get latitude and longitude from json data
+			$data['latitude']  = $output->results[0]->geometry->location->lat; 
+			$data['longitude'] = $output->results[0]->geometry->location->lng;
+			
+	
+			//Return latitude and longitude of the given address
+			if(!empty($data)){
+				return $data;
+			}else{
+				return false;
+			}
+		}else{
+			return false;   
+		}
+	}
+	
+	/**
+     * Notifies user their password has changed.
+     * @param $id
+     * @return
+     */
+    function __sendPasswordChangedEmail($id = null) {
+        if (!empty($id)) {
+            $this->User->id = $id;
+            $User = $this->User->read();
+
+            $this->Email->to 		= $User['User']['email'];
+            $this->Email->subject 	= 'Password Changed - DO NOT REPLY';
+            $this->Email->replyTo 	= 'do-not-reply@example.com';
+            $this->Email->from 		= 'Do Not Reply <do-not-reply@example.com>';
+            $this->Email->template 	= 'password_reset_success';
+            $this->Email->sendAs 	= 'both';
+            $this->set('User', $User);
+            $this->Email->send();
+
+            return true;
+        }
+        return false;
+    }
+	
+  
+
+/**********************************************dashboard***********************************************/	
+    //function for admin dashboard
+    public function admin_dashboard() {
+	
+/// print_r($this->Session->read('Auth'));exit;
+	$this->admin_check_login();
+      if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) {
+		
+		
+		  
+        } else {
+            $this->Session->setFlash("Unauthorized access", 'error');
+            //$this->redirect($this->referer());
+        }
+    }
+/**************************************************CHANGE PASSWORD******************************************************/
+    /**
+     * Function for changing user password
+     * admin_changePassword method
+     * @name admin_changePassword
+     * @acces public 
+     * @param  null
+     * @return void
+     * @created 13 Nov 2014
+     * @modified 15 Nov 2014
+
+     */
+	 public function admin_changePassword() 
+		{
+		$this->loadModel('Role');
+		$this->loadModel('User');
+		$user_id=$this->Session->read('Auth.User.id');
+
+	
+		if(!empty($this->data))
+		{
+
+		$old = $this->data['User']['old_password'];
+		$old_password = $this->Auth->password($old);
+		//print_r($old_password); old pwd encrypted
+		//exit;
+	$check_password = $this->User->find('first',array('conditions'=>array('User.id'=>$user_id,'User.password'=>$old_password),'fields'=>array('User.password')));
+			
+
+		if(!empty($check_password))
+		{
+		
+			  $new = $this->data['User']['new_password'];			   
+			  $re_type_new = $this->data['User']['confirm_password'];
+			
+			  if(!empty($new) && !empty($re_type_new))
+			  {
+				  if($new == $re_type_new)
+				  {
+
+					  $this->request->data['User']['password']= $new;
+					  $this->User->id = $user_id;
+				 
+					  if($this->User->save($this->data))
+					  {
+
+						$password_change_successfully = __('Password changed successfully',true);
+						$this->Session->setFlash(__($password_change_successfully, true),'success');
+						$this->redirect($this->referer());
+					  }
+
+				  }
+
+			 }
+
+		 }
+		 else
+		 {
+			$sorry_your_old_password_is_incorrect = __('Sorry your old password is incorrect',true);
+			$this->Session->setFlash(__($sorry_your_old_password_is_incorrect, true),'error');
+		 }
+		}
+
+		}
+	/*
+		Rupa
+	  19-10-20178
+		id proof list
+	*/
+	public function admin_idProofList() 
+	{	
+	$cond=array();
+		$this->admin_check_login();
+		$this->loadModel('IdProof');
+	
+		
+		if(isset($this->request->data['IdProof']))
+		{					
+		$this->Session->write('IdProofSearch',$this->request->data['IdProof']);
+		}
+		else
+		{	
+		$this->request->data['IdProof']=$this->Session->read('IdProofSearch');
+		
+		}		
+		if(isset($this->request->data['IdProof']))				
+		{			
+			if(isset($this->request->data['IdProof']['name']) and !empty($this->request->data['IdProof']['name']))				
+			{
+				$cond['IdProof.name LIKE']="%".$this->request->data['IdProof']['name']."%";
+			}				
+		}		
+		
+						
+		$conditions = array(
+			'IdProof.id !=' => BOOL_FALSE,
+			'IdProof.is_deleted' => BOOL_FALSE,
+			'IdProof.is_active' => BOOL_TRUE
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'IdProof' => array(
+				'conditions' => $conditions,
+				'order' => array('IdProof.id' => 'ASC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => 0
+		));
+		$ids = $this->Paginator->paginate('IdProof');
+		$this->set(compact('ids'));		
+		
+	}
+	/*
+		Rupa
+	  19-10-20178
+		reset id proof list
+	*/
+	
+	public function admin_resetIdProofSearch() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = FALSE;						
+		$this->admin_check_login();		
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{			
+			$this->Session->delete('IdProofSearch');
+			$this->redirect($this->referer());	
+			
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}		
+		
+    }
+/*
+		Rupa
+	  19-10-20178
+		add id proof 
+	*/
+	public function admin_addIdProof()
+	{
+	   $this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('IdProof');
+		
+		if ($this->request->is('ajax')) 
+			{
+				$this->IdProof->create();			
+				if ($this->IdProof->save($this->request->data['IdProof'])) 
+				{
+						$id=$this->IdProof->getInsertID();
+						$name=$this->request->data['IdProof']['name'];
+						
+					echo json_encode(array('status'=>'200','message'=>'IdProof added successfully', 'id'=>$id,'name'=>$name));
+				} 
+				else 
+				{
+					echo json_encode(array('status'=>'401','message'=>'IdProof could not be added'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+				
+		
+	}
+	/*
+		Rupa
+	  19-10-20178
+	set id proof data
+	*/
+	public function getDataSetDataID() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$model= $this->request->data['model'];
+				$this->loadModel($model);
+				$this->$model->id =$id;
+				if (!$this->$model->exists()) 
+				{
+					throw new NotFoundException('Invalid '.$model);
+
+				}
+				else
+				{				
+					$data=$this->$model->findById($id);
+					//echo'<pre>';print_r($data);exit;
+					echo json_encode(array('status'=>'200','mydata'=>$data,));				
+
+				}
+				
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	/*
+		Rupa
+	  19-10-20178
+		edit id proof list
+	*/
+	public function admin_editIdProof()
+	{
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('IdProof');
+		if ($this->request->is('ajax')) 
+			{
+				$id=$this->request->data['IdProof']['id'];
+				if(!empty($id))
+					{
+						if ($this->IdProof->save($this->request->data)) 
+						{
+								$name=ucfirst(strtolower($this->request->data['IdProof']['name']));
+								
+								
+								
+							echo json_encode(array('status'=>'200','message'=>'IdProof edit successfully', 'id'=>$id,'name'=>$name));
+						} 
+						else 
+						{
+							echo json_encode(array('status'=>'401','message'=>'IdProof could not be added'));
+						}
+					}
+			}
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+			$this->redirect($this->referer());
+		}
+			
+	}
+	/*
+		Rupa
+	  19-10-20178
+		delete id proof list
+	*/
+	public function admin_deleteIdProof() 
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');		
+		$this->loadModel('IdProof');
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$this->IdProof->id =$id;
+				if (!$this->IdProof->exists()) 
+				{
+					throw new NotFoundException('Invalid IdProof');
+				}
+					   if ($this->IdProof->saveField('is_deleted',BOOL_TRUE)) 
+					   {
+							$this->IdProof->saveField('is_active',BOOL_FALSE);
+						echo json_encode(array('status'=>'200','id'=>$id,'message'=>'IdProof Deleted successfully'));
+					   }else
+					   {
+						   echo json_encode(array('status'=>'401','message'=>'IdProof could not be Deleted'));
+					   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+    }
+	
+	 
+}
+?>

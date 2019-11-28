@@ -1,0 +1,350 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                    <div class="page-title">
+                        <h2>Country List</h2>
+                    </div>
+            </div>
+            <div class="col-sm-8">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">Master</li>
+                            <li class="active">Country List</li>
+                        </ol>
+                    </div>
+                  </div>
+        </div>
+				
+<div class="container">
+		<div class="col-sm-8">		
+			<div class="row">
+			<?php echo $this->element('flash'); ?> 		 		
+			<?php 
+			echo $this->Form->create('Country', array(
+			'url'=>array('controller'=>'utilities','action'=>'countryList','admin'=>true,'ext'=>URL_EXTENSION),
+			'class' => 'search_form', 			
+			'novalidate' => true,		
+			'role' => 'form',
+			'inputDefaults' => array(
+			'format' => array('before', 'label', 'between', 'input', 'error', 'after'),
+			'div' => array('class' => 'form-group col-sm-4'),
+			'class' => array('form-control'),
+			'label' => array('control-label'),
+			'between' => '',
+			'after' => '',
+			'error' => array('attributes' => array('wrap' => 'span', 'class' => 'help-inline')),
+			)));	
+			?>	
+			<?php echo $this->Form->input('name',array('class'=>'form-control','placeholder'=>'Search Here By Name','label'=>false)); ?>   
+			
+			<?php
+			echo $this->Form->button('Search',array('type'=>'submit','class'=>'btn btn-primary','value'=>'Search','name'=>'data[Country][Search]'));
+			?>	
+			<?php
+			echo $this->Html->link('Reset',
+			array('controller' => 'utilities','action' => 'resetCountrySearch','admin'=>true,'ext'=>URL_EXTENSION),
+			array('escape'=>false,'class'=>'btn btn-danger','title'=>'Reset Search'),array());			
+			?>	
+			<?php echo $this->Form->end(); 	?>
+				</div>
+			</div>
+			<div class="col-sm-4">
+			<a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#addCountryModal"  data-controls-modal="addCountryModalLabel" data-backdrop="static" data-keyboard="false" >Add Country</a>
+		
+		</div>
+		
+	</div>
+	<div class="row voffset2"></div>
+		<div class="col-sm-12">		
+		<div class="table-responsive">		
+			<table class="table table-bordered master_table">
+				<thead class="thead-dark">
+					<tr>
+					<th><?php echo $this->Paginator->sort('Country.name', __('Name'), array('escape' => FALSE)); ?></th>	
+					<th>Action</th>
+					</tr>
+				</thead>
+				
+				<tbody id="countryTable">
+					<?php
+					if(!empty($countries))	
+					{
+						$i=($this->request->params['paging']['Country']['page']-1) * $this->request->params['paging']['Country']['limit']; 
+						
+						foreach ($countries as $row)
+						{                   
+							$i++;
+							if($i % 2==1)
+							{
+								$class='bg-tr';
+							}
+							else
+							{
+								$class='table_eventr';
+							}
+							?>
+							<tr class="<?php echo $class; ?>" id="contryTr<?php echo $row['Country']['id']; ?>">		
+								<td id="nametd<?php echo $row['Country']['id']; ?>"><?php echo $row['Country']['name']; ?></td>	
+								
+								<td><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteCountry(<?php echo $row['Country']['id']; ?>)"><i class="fa fa-times-circle" tabindex="3"></i></a>
+									<a href="javascript:void()" class="btn btn-info btn-xs" onclick="editCountry(<?php echo $row['Country']['id']; ?>)"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								</td>	
+							</tr>	
+							<?php
+						}
+					}
+					else
+					{ 
+					?>
+					<tr>
+					<td colspan="3" align="center">No Records</td>
+					</tr>
+					<?php
+					}
+					?>
+				</tbody>
+			</table>
+			
+			<?php echo $this->element('pagination'); ?>   	
+		</div>
+		
+<!------------------------------------Add Country----------------------------------------->
+<div class="modal fade" id="addCountryModal" tabindex="-1" role="dialog" aria-labelledby="addCountryModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('Country', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addCountryForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Add Country</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row">
+			
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<label>Name <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'Name','class'=>'form-control','label'=>false)); ?>
+			</div>
+				<div class="col-sm-12 voffset2"></div>
+			
+			
+		
+		</div>
+		</div>
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-danger pull-right">Add</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ <!------------------------------------Edit Country----------------------------------------->
+<div class="modal fade" id="EditCountryModal" tabindex="-1" role="dialog" aria-labelledby="EditCountryModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('Country', array(
+		'class' => 'form-horizontal', 
+		'id'=>'editCountryForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Edit Country</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row">
+			
+			<div class="col-sm-3">
+			<div class="row voffset1"></div>
+			<?php echo $this->Form->input('id',array('type'=>'hidden','id'=>'EditCountryId')) ?>
+			<label>Name <span class="required_fields">*</span></label></div>
+			 <div class="col-sm-8">
+			<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'Name','id'=>'EditCountryName','class'=>'form-control','label'=>false)); ?>
+			</div>
+				<div class="col-sm-12 voffset1"></div>
+
+	
+
+		</div>
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-danger pull-right">Update</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ <script type="text/javascript">
+
+<!-----------------------------add Country validation--------------------------->	
+		$("#addCountryForm").validate({
+		          
+            rules: {			
+				"data[Country][name]": {
+                    required: true,                   
+                }						
+				
+            },
+            messages: {
+				"data[Country][name]": {
+                    required: "Please enter Country name",                   
+                }				
+		    }
+        });
+		
+		<!-----------------------------Edit Country validation--------------------------->	
+		$("#editCountryForm").validate({
+		          
+            rules: {			
+				"data[Country][name]": {
+                    required: true,                   
+                }						
+				
+            },
+            messages: {
+				"data[Country][name]": {
+                    required: "Please enter Country name",                   
+                }				
+		    }
+        });
+		
+		
+ /*------------------------------------------------Add Country--------------------------------------------*/
+   $("#addCountryForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#addCountryForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'addCountry','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#addCountryModal').modal('hide');}, 100);
+					document.getElementById("addCountryForm").reset();
+					
+					
+					$('#countryTable').prepend('<tr class="table_eventr" id="contryTr'+data.id+'"><td id="nametd'+data.id+'">'+data.name+'</td><td><a href="javascript:void()" class="btn btn-danger btn-xs" onclick="deleteCountry('+data.id+')"><i class="fa fa-times-circle" tabindex="3"></i></a><a href="javascript:void()" class="btn btn-info btn-xs" onclick="editCountry('+data.id+')"><i class="fa fa-pencil" aria-hidden="true"></i></a></td></tr>');
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+	/*------------------------------------------------------Set date for edit Country-------------------------------------*/
+	function editCountry(id)
+	{
+		$('#EditCountryId').val(id);
+		var name=$('#nametd'+id).html();
+		var floor=$('#floortd'+id).html();
+		$('#EditCountryName').val(name);
+		$('#EditCountryFloor').val(floor);
+		$('#EditCountryModal').modal('show');
+	}
+	
+	/*------------------------------------------------Edit Country--------------------------------------------*/
+   $("#editCountryForm").on('submit', (function(e) {
+		e.preventDefault();
+		if($('#editCountryForm').valid()==true)
+		{
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'editCountry','admin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 1000) 
+				{	
+					$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#EditCountryModal').modal('hide');}, 100);
+					document.getElementById("editCountryForm").reset();
+					
+					$('#nametd'+data.id).html(data.name);
+					$('#floortd'+data.id).html(data.floor);
+					
+						
+				}
+				else 
+				{
+					$("#messageDiv").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		}
+	}));
+	<!------------------------------------------------------ Delete Country ------------------------------------------->
+function deleteCountry(data_id){
+	//alert();
+	var ans= confirm("Are you sure you want to delete this Country ?");
+        if (ans)
+        {
+
+            var id = data_id;
+			
+            var data = 'id=' + id+'&model=Country';
+            
+			
+			$.ajax(
+            {
+                   type: "POST",
+                   url: "<?php echo Router::url(array('controller' => 'utilities','action' => 'deleteByModalOrId','admin'=>true));?>" ,
+                   data: data,
+                   cache: false,
+				   dataType:'json', 
+                   success: function(data)
+                   {
+					  
+					   if (data.status == 1000) 
+						{	
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> Country deleted successfully.</div>');
+							$('#countryTable #contryTr'+data.id).remove();
+							
+						}else{
+							$("#messageDiv").html('<div class="alert alert-success"><strong>Success!</strong> Country counld not be deleted .</div>');
+							
+						}
+					
+                   }
+             });
+        }
+}	
+	</script>
+	
+	</div>
+</div>

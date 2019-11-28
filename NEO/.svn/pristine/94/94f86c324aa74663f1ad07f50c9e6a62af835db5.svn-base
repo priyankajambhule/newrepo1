@@ -1,0 +1,550 @@
+<?php
+
+App::uses('AppController', 'Controller');
+App::uses('CakeEmail', 'Network/Email');
+
+class HrsController extends AppController {
+
+    /**
+     * Helpers and Components
+     * @var array
+    **/
+	
+	/*
+	 Mrunali D
+	15.10.2018
+	*/
+	 //function for admin logout
+	 
+	public $components = array('Paginator');	
+    public function hr_logout() {
+		
+        if ($this->Auth->user('id')) {
+            $this->loadModel('User');
+            $this->User->id = $this->Auth->user('id');
+            if ($this->User->saveField('is_logged_in', 0)) {
+                $this->Session->destroy('Auth.User');
+                $this->redirect($this->Auth->logout());
+            }
+        } else {
+            $this->redirect($this->Auth->logout());
+        }
+    }
+	
+	 /*
+	 Mrunali D
+	17.10.2018
+	*/
+	 public function hr_changePassword() 
+	{
+	    $this->layout = 'hr/inner';
+		$this->loadModel('Role');
+		$this->loadModel('User');
+		$user_id=$this->Session->read('Auth.User.id');
+
+	
+		if(!empty($this->data))
+		{
+
+		$old = $this->data['User']['old_password'];
+		$old_password = $this->Auth->password($old);
+		//print_r($old_password); old pwd encrypted
+		//exit;
+	    $check_password = $this->User->find('first',array('conditions'=>array('User.id'=>$user_id,'User.password'=>$old_password),'fields'=>array('User.password')));
+			
+
+		if(!empty($check_password))
+		{
+		
+			  $new = $this->data['User']['new_password'];			   
+			  $re_type_new = $this->data['User']['confirm_password'];
+			
+			  if(!empty($new) && !empty($re_type_new))
+			  {
+				  if($new == $re_type_new)
+				  {
+
+					  $this->request->data['User']['password']= $new;
+					  $this->User->id = $user_id;
+				 
+					  if($this->User->save($this->data))
+					  {
+
+						$password_change_successfully = __('Password changed successfully',true);
+						$this->Session->setFlash(__($password_change_successfully, true),'success');
+						$this->redirect($this->referer());
+					  }
+
+				  }
+
+			 }
+
+		 }
+		 else
+		 {
+			$sorry_your_old_password_is_incorrect = __('Sorry your old password is incorrect',true);
+			$this->Session->setFlash(__($sorry_your_old_password_is_incorrect, true),'error');
+		 }
+		}
+
+		}
+	
+/*
+  Mrunali D 
+  15.10.2018 
+  comapany admin dashboard
+*/	
+   public function hr_dashboard()
+   {
+	    $this->layout = 'hr/inner';
+	   $this->hr_check_login();
+	   if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{
+			
+		}
+   }
+   /*
+    Mrunali D 
+	17.10.2018
+	employee list
+   */
+ 
+
+	 public function hr_employeeList()
+     {
+	    $this->layout = 'hr/inner';
+		 $cond=array();
+		
+		$this->loadModel('User');
+		$this->loadModel('Role');
+		$this->loadModel('IdProof');
+		
+		$this->loadModel('Country');	
+		$this->loadModel('State');	
+		$this->loadModel('City');	
+		$countryList=$this->Country->getCountryList();
+		$this->Set(compact('countryList'));
+		
+		$getStates=$this->State->getStateList();
+		$this->Set(compact('getStates'));
+
+		$getCities=$this->City->getCityList();
+		$this->Set(compact('getCities'));
+		
+	     $idproofList=$this->IdProof->getIdProofList();
+		 $this->Set(compact('idproofList'));
+		 
+		 $roleList=$this->Role->getRoleNameList();
+		 $this->Set(compact('roleList'));
+		 
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{	
+			if(isset($this->request->data['User']))
+			{					
+				$this->Session->write('UserSearch',$this->request->data['User']);
+			}
+			else
+			{	
+				$this->request->data['User']=$this->Session->read('UserSearch');		
+			}
+			if(isset($this->request->data['User']))				
+			{			
+				if(isset($this->request->data['User']['name']) and !empty($this->request->data['User']['name']))				
+				{
+					$cond['User.name LIKE']="%".$this->request->data['User']['name']."%";
+				}				
+			}
+			
+			$conditions = array(
+			'User.id !=' => BOOL_FALSE,
+			'User.is_deleted' => BOOL_FALSE,
+			'User.is_active' => BOOL_TRUE
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'User' => array(
+				'conditions' => $conditions,
+				'order' => array('User.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				
+				'recursive' => 2
+		));
+		$user = $this->Paginator->paginate('User');
+		
+	//echo "<pre>";print_r($user);exit;
+		
+		$this->set(compact('user'));	
+		}
+		else
+		{
+			$this->Session->setFlash("UnSubjectized access", 'error');
+            $this->redirect($this->referer());
+		}	
+		
+	 }
+	 /*reset employee button*/
+		public function hr_resetEmployeeSearch()
+		{
+			$abc="UserSearch";
+			$this->autoRender = FALSE;
+					$this->layout = FALSE;						
+					
+					if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+					{			
+						$this->Session->delete($abc);
+						$this->redirect($this->referer());	
+						
+					}
+					else
+					{
+						$this->Session->setFlash("Unauthorized access", 'error');
+						$this->redirect($this->referer());
+					}	
+			
+		}
+		/*
+		Mrunali D
+		19.10.2018
+		add Employee
+		*/
+		public function hr_addEmployee()
+		{
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('User');
+		$this->loadModel('Role');
+		
+		if($this->request->is('ajax')) 
+			{
+				//echo '<pre>';print_r($this->request->data);
+				$this->User->create();	
+				$this->request->data['User']['date_of_joining']=date('Y-m-d',strtotime($this->request->data['User']['date_of_joining']));
+						
+				if($this->User->save($this->request->data['User'])) 
+				{
+					
+					   $id=$this->User->getInsertID();
+						$name=$this->request->data['User']['name'];
+						$last_name=$this->request->data['User']['last_name'];
+						$address=$this->request->data['User']['address'];
+						$role_od=$this->request->data['User']['role_id'];
+						$education=$this->request->data['User']['education'];
+						$pf_no=$this->request->data['User']['pf_no'];
+						$mobile_no=$this->request->data['User']['mobile_no'];
+						$salary=$this->request->data['User']['salary'];
+				    	$post=$this->request->data['User']['application_access'];
+					      if($post==0)
+							{
+								$type='NO';
+							}
+							else if($post==1)
+							{
+								$type='YES';
+							}
+							 $role_name_data = $this->User->find('first',array('conditions'=>array('Role.id'=>$role_od),'fields'=>array('Role.name')));
+							// print_r($role_name_data);
+				if(!empty($role_name_data))
+				{
+					$role_name=$role_name_data['Role']['name'];
+					
+				}
+					echo json_encode(array('status'=>'200','message'=>'Empoyee added successfully', 'id'=>$id,'name'=>$name,'type'=>$type,'last_name'=>$last_name,'address'=>$address,'role_id'=>$role_name,'education'=>$education,'pf_no'=>$pf_no,'mobile_no'=>$mobile_no,'salary'=>$salary));
+				} 
+				else 
+				{
+					echo json_encode(array('status'=>'401','message'=>'User could not be added'));
+				}
+			}				
+		
+		else
+		{
+			$this->Session->setFlash("UnSubjectized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+		
+			
+		}
+			/*Mrunali D
+		29.04.2018*/
+			/*--------edit User ---*/
+	public function hr_editEmployee()
+	{
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('User');
+					
+		
+		if ($this->request->is('ajax')) 
+			{
+			//echo "<pre>";print_r($this->request->data);
+				
+				$id=$this->request->data['User']['id'];
+				
+				
+				if(!empty($id))
+					{
+						$this->request->data['user']['id']=$id;
+						
+						if ($this->User->save($this->request->data)) 
+						{									
+							/*$this->request->data['User']['id'] = $id;
+							$this->request->data['User']['name'] = $this->request->data['User']['name'];
+							$this->request->data['User']['middle_name'] = $this->request->data['User']['middle_name'];
+							$this->request->data['User']['last_name'] = $this->request->data['User']['last_name'];
+							$this->request->data['User']['mobile']= $this->request->data['User']['mobile'];
+							$this->request->data['User']['address']=$this->request->data['User']['address'];
+							$this->request->data['User']['gender']=$this->request->data['User']['gender'];
+							$this->request->data['User']['email']=$this->request->data['User']['email'];				
+							$this->request->data['User']['country']=$this->request->data['User']['country_id'];
+							$this->request->data['User']['state']=$this->request->data['User']['state_id'];
+							$this->request->data['User']['city']=$this->request->data['User']['city_id'];
+							$this->request->data['User']['pin']=$this->request->data['User']['pin_code'];
+							$this->request->data['User']['salary']=$this->request->data['User']['salary'];
+							$this->request->data['User']['id_proof_type']=$this->request->data['User']['IdProof'];
+							$this->request->data['User']['id_proof_no']=$this->request->data['User']['idProofNo'];
+							$this->request->data['User']['date_of_joining']=$this->request->data['User']['dateOfJoining'];
+							$this->request->data['User']['pf_no']=$this->request->data['User']['pf_no'];
+							$this->request->data['User']['dob']=$this->request->data['User']['dob'];
+							$this->request->data['User']['application_access']=$this->request->data['User']['id'];
+							$this->request->data['User']['marital_status']=$this->request->data['User']['status'];
+							$this->request->data['User']['role_id']=$this->request->data['User']['Rol_id'];
+							$this->request->data['User']['application_access']=$this->request->data['User']['permission'];
+							*/
+							echo json_encode(array('status'=>'200','id'=>$id,'message'=>'your data edit successfully'));
+							
+						}
+						else 
+						{
+							echo json_encode(array('status'=>'401','message'=>'Employee could not be edit'));
+						}
+					}
+			}
+	
+			else
+			{
+				$this->Session->setFlash("Unauthorized access", 'error');
+				$this->redirect($this->referer());
+			}
+	}
+	public function hr_getDataByUser()
+	{
+		$this->autoRender = FALSE;
+		$this->layout = ('ajax');	
+		$this->loadModel('User');
+		$this->loadModel('City');
+		$this->loadModel('Country');
+		$this->loadModel('State');
+		$this->loadModel('IdProof');
+		$this->loadModel('Role');
+		
+		
+		if ($this->request->is('ajax')) 
+		{
+			$id= $this->request->data['id'];
+			$getDetail= $this->User->find('first',array(
+				'conditions'=>array(
+					'User.id'=>$id,
+					'User.is_active'=>BOOL_TRUE,
+					'User.is_deleted'=>BOOL_FALSE,
+				),
+				'contain'=>array('Role'=>array('id','name')),
+			));
+			//print_r($getDetail);
+			
+			$gender_arr=array(
+									0=>'Male',
+									1=>'Female'
+									);
+			$status_arr=array(
+									0=>'Other',
+									1=>'Married',
+									2=>'Unmarried'
+									);	
+			$permission_arr=array(
+									0=>'NO',
+									1=>'YES'
+									
+									);						
+			if(!empty($getDetail))
+			{
+						$marital_status="";	
+                         $gender='';						
+				$name=ucwords(strtolower($getDetail['User']['name']));			
+				$middle_name=ucwords(strtolower($getDetail['User']['middle_name']));
+				$last_name=ucwords(strtolower($getDetail['User']['last_name']));			
+				$email=$getDetail['User']['email'];
+				$mobile_no=$getDetail['User']['mobile_no'];
+				if(!empty($getDetail['User']['gender']))
+				{
+					$gender=$gender_arr[$getDetail['User']['gender']];
+					
+				}else{
+					$gender=$getDetail['User']['gender'];
+				}
+				
+				$gender_id=$getDetail['User']['gender'];
+				$salary=$getDetail['User']['salary'];
+				if(!empty($getDetail['User']['marital_status']))
+				{
+				$marital_status=$status_arr[$getDetail['User']['marital_status']];
+				}else{
+					$marital_status=$getDetail['User']['marital_status'];
+				}
+				$marital_status_id=$getDetail['User']['marital_status'];
+				$dob=$getDetail['User']['dob'];
+				$alt_mobile_no=$getDetail['User']['alt_mobile_no'];
+				$pf_no = $getDetail['User']['pf_no'];	
+				$id_type = $getDetail['User']['id_proof_type'];	
+				$id_type_no = $getDetail['User']['id_proof_no'];	
+				$date_joining = $getDetail['User']['date_of_joining'];	
+				$address=ucwords(strtolower($getDetail['User']['address']));
+				$country=ucwords(strtolower($getDetail['User']['country']));
+				$state=ucwords(strtolower($getDetail['User']['state']));
+				$city=ucwords(strtolower($getDetail['User']['city']));
+				$role_id=ucwords(strtolower($getDetail['Role']['name']));
+				$role_id_no=ucwords(strtolower($getDetail['User']['role_id']));
+				$pin=$getDetail['User']['pin'];
+				$education=ucwords(strtolower($getDetail['User']['education']));
+				$application_access=$permission_arr[$getDetail['User']['application_access']];
+				$application_access_id=$getDetail['User']['application_access'];
+				
+				
+				$IdProofMaster=$this->IdProof->find('first',array('conditions'=>array('IdProof.id'=>$id_type,'IdProof.is_deleted'=>BOOL_FALSE,'IdProof.is_active'=>BOOL_TRUE),'fields'=>array('IdProof.name')));
+			
+				$idProofName=$IdProofMaster['IdProof']['name'];
+				
+				
+				$CountryMaster=$this->Country->find('first',array('conditions'=>array('Country.id'=>$country,'Country.is_deleted'=>BOOL_FALSE,'Country.is_active'=>BOOL_TRUE),'fields'=>array('Country.name')));
+				$countryName=$CountryMaster['Country']['name'];
+				
+				$StateMaster=$this->State->find('first',array('conditions'=>array('State.id'=>$state,'State.is_deleted'=>BOOL_FALSE,'State.is_active'=>BOOL_TRUE),'fields'=>array('State.name')));
+				$stateName=$StateMaster['State']['name'];
+				
+				$CityMaster=$this->City->find('first',array('conditions'=>array('City.id'=>$city,'City.is_deleted'=>BOOL_FALSE,'City.is_active'=>BOOL_TRUE),'fields'=>array('City.name')));
+				$cityName=$CityMaster['City']['name'];
+				
+				
+				echo json_encode(array('status'=>'200','name'=>$name,'middle_name'=>$middle_name,'last_name'=>$last_name,'email'=>$email,'mobile_no'=>$mobile_no,
+				'address'=>$address,'role_id'=>$role_id,'alt_mobile_no'=>$alt_mobile_no,'dob'=>$dob,'date_joining'=>$date_joining,'pin'=>$pin,
+				'education'=>$education,'id_type_no'=>$id_type_no,'pf_no'=>$pf_no,'idProofName'=>$idProofName,'marital_status'=>$marital_status,
+				'salary'=>$salary,'gender'=>$gender,'countryName'=>$countryName,'stateName'=>$stateName,'cityName'=>$cityName,'application_access'=>$application_access,
+				'application_access_id'=>$application_access_id,'country'=>$country,'state'=>$state,'city'=>$city,'role_id_no'=>$role_id_no,'id_type'=>$id_type,'gender_id'=>$gender_id,'marital_status_id'=>$marital_status_id));
+			}
+		}
+	
+	}
+	
+	/*------------- viewExamData ----------*/
+	public function admin_viewExamData(){
+		
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('User');
+		
+		if ($this->request->is('ajax')) 
+			{
+				$id=$this->request->data['id'];
+				
+				
+				$interdata=$this->User->find('first',array(
+					'conditions'=>array(
+						'User.id !='=>BOOL_FALSE,
+						'User.id'=>$id,
+						'User.is_active'=>BOOL_TRUE,
+						'User.is_deleted'=>BOOL_FALSE
+						),
+					
+					'recursive'=>1,
+					));
+				
+					if(!empty($interdata))	
+					{
+						$firstname=$interdata['User']['firstname'];
+						$lastname=$interdata['User']['lastname'];
+						$post=$interdata['User']['role_id'];
+						if($post==ADMIN_ROLE_ID)
+							{
+								$type='Admin';
+							}
+							else if($post==CTO_ROLE_ID)
+							{
+								$type='CTO';
+							}
+							else if($post==HR_ROLE_ID)
+							{
+									$type='HR';
+							}
+						$email=$interdata['User']['email'];
+						$mobile_no=$interdata['User']['mobile_no'];
+						$username=$interdata['User']['username'];
+						$password=$interdata['User']['password'];
+						$address=$interdata['User']['address'];
+						$city=$interdata['User']['city'];
+						
+							echo json_encode(array('status'=>'1000','message'=>'Candidate details viewed successfully',
+								'id'=>$id, 
+								'firstname'=>$firstname, 
+								'lastname'=>$lastname,
+								'post'=>$type,
+								'email'=>$email,
+								'mobile_no'=>$mobile_no,
+								'username'=>$username,
+								//'password'=>$password,
+								'address'=>$address,
+								'city'=>$city
+								));
+						} 
+						else 
+						{
+							echo json_encode(array('status'=>'1001','message'=>'Candidate details could not be found'));
+						}
+					
+			}
+		
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+	}
+	/*
+	Mrunali D 
+	19.10.2018
+	foe delete employee
+	*/
+	public function hr_deleteByModalOrId()
+		{
+			$this->autoRender = FALSE;
+		    $this->layout = ('ajax');		
+			
+		if ($this->request->is('ajax')) 
+			{
+				$id= $this->request->data['id'];
+				$model= $this->request->data['model'];
+				$this->loadModel($model);
+				$this->$model->id =$id;
+				if (!$this->$model->exists()) 
+				{
+					throw new NotFoundException('Invalid '.$model);
+				}
+									
+							   if ($this->$model->saveField('is_deleted',BOOL_TRUE)) 
+							   {
+									$this->$model->saveField('is_active',BOOL_FALSE);
+								echo json_encode(array('status'=>'1000','id'=>$id));
+							   }
+						
+		
+			}
+			else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}
+			
+		}
+		
+}

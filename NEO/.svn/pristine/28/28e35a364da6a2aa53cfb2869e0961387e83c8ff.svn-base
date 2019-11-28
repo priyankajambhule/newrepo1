@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+	<?php echo $this->Html->charset(); ?>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	
+	<title><?php echo $this->fetch('title'); ?></title>
+
+	<?php       
+	echo $this->Html->css('../plugins/bootstrap/css/bootstrap.min');				
+	echo $this->Html->css('../plugins/bootstrap/css/font-awesome.min');			
+	echo $this->Html->css('../plugins/nprogress/nprogress');
+	echo $this->Html->css('../plugins/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.min');
+	echo $this->Html->css('../plugins/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.min');
+	echo $this->Html->css('compadmin/inner/custom');
+	echo $this->Html->css('compadmin/inner/style');
+	
+	echo $this->Html->script('compadmin/inner/jquery');		
+	echo $this->Html->script('../plugins/bootstrap/js/bootstrap.min');
+	echo $this->Html->script('../plugins/validations/jquery.validate.min');
+	echo $this->Html->script('../plugins/validations/additional-methods.min');
+	
+	echo $this->Html->meta('favicon.ico','images/favicon.png',array('type' => 'icon'));
+	echo $this->fetch('meta');
+	echo $this->fetch('css');
+	/* calender*/
+	
+     ?>       
+    </head>    
+
+<body class="nav-md">
+    <div class="container body">
+      <div class="main_container">
+		<?php echo $this->element('compadmin/side_navigation'); ?>
+		
+		<!-- page content -->
+		<div class="right_col" role="main">

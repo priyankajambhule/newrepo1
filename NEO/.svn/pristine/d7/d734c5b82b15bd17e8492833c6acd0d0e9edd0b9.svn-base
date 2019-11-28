@@ -1,0 +1,479 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                <div class="page-header float-left">
+                    <div class="page-title">
+                        <h4>Add RFQ</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="page-header float-right">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">RFQ</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+<div class="row">		
+<div class="col-sm-12">
+<div id="msgout">
+    <?php
+    echo $this->element('flash');
+   
+    ?>
+    </div>
+	<div class="col-sm-1"></div>
+	<div class="col-sm-10 rfqForm">
+	
+	
+    <?php echo $this->Form->create('Rfq', array('id'=>'addRfqform','novalidate' => true, 'type' => 'file')); ?>
+	    <div class="col-sm-12">
+    <div class="form-group input-group">
+    
+            <?php echo $this->Form->input('customer_id', array('type'=>'select','options'=>$customerList,'label' => 'Customer Name','empty'=>'select customer', 'div' => false, 'class' => 'form-control select_customer_list','id'=>'customerId', 'maxlength' => 255)); ?>
+         <span class="input-group-btn" style="padding: 24px 2px 0px 2px;">
+		<a href="#" class="btn btn-info " data-toggle="modal" data-target="#addRFQModal"  data-controls-modal="addRFQModalLabel" data-backdrop="static" data-keyboard="false" >+</a>
+		</span>
+   
+    </div>    
+  </div>
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('part_no', array('type'=>'text','label' => 'Part Number', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+        
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+             <?php echo $this->Form->input('part_name', array('type'=>'text','label' => 'Part Name', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+            
+        </div>
+    </div>  
+	        
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+             <?php echo $this->Form->input('part_description', array('type'=>'text','label' => 'Part Description', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+            
+        </div>
+    </div>
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('part_weight', array('type'=>'text','label' => 'Part Weight (KG)', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+	<div class="col-sm-12 voffset2"></div>
+    
+	
+        <div class="col-sm-12 ">
+		<div class="form-group input-group">
+            <?php echo $this->Form->input('mfg_id', array('type'=>'select','options'=>$mfgList,'label' => 'MFG Location','empty'=>'select Location', 'div' => false, 'class' => 'form-control select_mfglocation', 'id'=>'mfgId','maxlength' => 255)); ?>
+		<span class="input-group-btn" style="padding: 24px 2px 0px 2px;">	<a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#addMFGModal"  data-controls-modal="addMFGModalLabel" data-backdrop="static" data-keyboard="false" >+</a></span>
+	   </div>  
+      
+   
+        </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('packing_type', array('type'=>'select','options'=>$packing_type,'label' => 'Type of packaging','empty'=>'select packaging type', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('quantity', array('type'=>'text','label' => 'Approx Quantity', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+           <div>
+	<?php
+	$options = array('1' => '&nbsp;Pices ', '2' => '&nbsp;Bin ');
+	$attributes = array(
+	'legend' => false,
+	'separator'=>' &nbsp;&nbsp; ',
+	'default'=>'1'
+	);
+	echo $this->Form->radio('quantity_unit', $options, $attributes);
+	?>
+	</div>
+        </div>
+    </div>  
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('project', array('type'=>'text','label' => 'Project', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 
+<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('project_description', array('type'=>'text','label' => 'Project Description', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 
+<div class="col-sm-12 voffset2"></div>
+    <div class="row">
+    <div class="col-sm-12">
+   
+        <div class="col-sm-3 ">
+		 <div class="form-group">
+            <?php echo $this->Form->input('y1', array('type'=>'text','label' => 'Year 1', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 	
+	
+    
+        <div class="col-sm-3">
+		<div class="form-group">
+            <?php echo $this->Form->input('y2', array('type'=>'text','label' => 'Year 2', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 	
+	
+	
+   
+        <div class="col-sm-3 ">
+		 <div class="form-group">
+            <?php echo $this->Form->input('y3', array('type'=>'text','label' => 'Year 3', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 	
+	
+	
+   
+        <div class="col-sm-3 ">
+		 <div class="form-group">
+            <?php echo $this->Form->input('y4', array('type'=>'text','label' => 'Year 4', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div> 	
+    </div> 	
+    </div> 	
+	
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+           <?php echo $this->Form->input('images',array('type'=>'file','class'=>'prod_image_cls','label'=>'Image','id'=>'imageNameId','accept'=>"image/*")); ?>
+        </div>
+    </div> 	
+	<div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+        <div class="col-sm-12 ">
+           <div>
+	<?php
+	$options = array('1' => '&nbsp;Visible-All ', '2' => '&nbsp;Tool Room','3' => '&nbsp;Design&Development');
+	$attributes = array(
+	'legend' => false,
+	'separator'=>' &nbsp;&nbsp;&nbsp ',
+	'default'=>'1'
+	);
+	echo $this->Form->radio('image_visibility', $options, $attributes);
+	?>
+	</div>
+        </div>
+    </div>  
+	
+<div>
+	<div class="col-sm-12 voffset2"></div>
+	
+   <div class="col-sm-12 inputDivision">
+        <input type="submit" value="Add" class="btn btn-success">
+        <button type="button" onclick="window.location ='addRfq'" class="btn btn-primary">Cancel</button> 
+    </div>   
+    <?php echo $this->Form->end(); ?>    
+</div>   
+
+</div>
+</div>
+</div>
+
+	
+<!------------------------------------Add customer----------------------------------------->
+<div class="modal fade" id="addRFQModal" tabindex="-1" role="dialog" aria-labelledby="addRFQModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('Customer', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addCustForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Add Customer</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row ">
+			
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Name <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('name',array('type'=>'text','placeholder'=>'Name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Company Name <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('company_name',array('type'=>'text','placeholder'=>'Enter company name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Contact No <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('mobile',array('type'=>'text','placeholder'=>'Enter Contact Number','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			
+			
+		</div>
+		
+			
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+	
+		
+       <button type="submit" id="addSocietySubBtn" class="btn btn-danger pull-right" >Add</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ </div>
+ 	
+<!------------------------------------Add MFG Location----------------------------------------->
+<div class="modal fade" id="addMFGModal" tabindex="-1" role="dialog" aria-labelledby="addMFGModalLabel">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content" >
+		<?php 
+		echo $this->Form->create('MfgLocation', array(
+		'class' => 'form-horizontal', 
+		'id'=>'addMfgForm',		
+		'novalidate' => true,		
+		'role' => 'form',
+		));			
+		?>
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title ">Add MFG</h4>
+		</div>
+		<div class="modal-body">
+		<div class="row ">
+			
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Customer <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('customer_id',array('type'=>'select','empty'=>'Customer Name','class'=>'form-control','options'=>$customerList,'label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			<div class="col-sm-3">
+				<div class="row voffset1"></div>
+				<label>Area <span class="required_fields">*</span></label>
+			</div>
+			 <div class="col-sm-8">
+				<?php echo $this->Form->input('area',array('type'=>'text','placeholder'=>'Enter area name','class'=>'form-control','label'=>false)); ?>
+			</div>
+			<div class="col-sm-12 voffset2"></div>
+			
+			
+		</div>
+		
+			
+      <div class="modal-footer">
+	 
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+	
+		
+       <button type="submit" id="addSocietySubBtn" class="btn btn-danger pull-right" >Add</button>
+      </div>
+	  
+	 <?php echo $this->Form->end(); ?>
+	</div>
+    
+  </div>
+ </div>
+ </div>
+
+<script type="text/javascript">
+$("#addRfqform").validate({  
+		          
+            rules: {			
+				
+                "data[Rfq][customer_id]": {
+                    required: true,                   
+                },
+				"data[Rfq][part_no]": {
+                    required: true,                   
+                },
+				"data[Rfq][packing_type]": {
+                    required: true,                   
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Rfq][customer_id]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Rfq][part_no]": {
+                    required: "Please enter part number.",
+                },
+				"data[Rfq][packing_type]": {
+                    required: "Please enter packing type.",
+                },
+							
+            }
+        });
+   
+   
+   /******************    add validation for add customer ******/
+   
+   $("#addCustForm").validate({  
+		          
+            rules: {			
+				
+                "data[Customer][name]": {
+                    required: true,                   
+                },
+				"data[Customer][company_name]": {
+                    required: true,                   
+                },
+				"data[Customer][mobile]": {
+                    required: true, 
+                     number:true,					
+                },
+				
+				
+            },
+            messages: {
+			
+                "data[Customer][name]": {
+                    required: "Please enter customer name.",
+                },
+				"data[Customer][company_name]": {
+                    required: "Please enter company name.",
+                },
+				"data[Customer][mobile]": {
+                    required: "Please enter contact number.",
+					number:"Please enter number",
+                },
+							
+            }
+        });
+   /*------------------------------------------------Add Customer--------------------------------------------*/
+ $("#addCustForm").on('submit', (function(e) {
+		e.preventDefault();
+		
+		//alert("hiii");
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'addCustModal','compadmin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#msgout").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#addRFQModal').modal('hide');}, 100);
+					document.getElementById("addCustForm").reset();
+					
+				   $('#customerId').append('<option value="'+data.id+'">'+data.comp_name+'</option>');
+				}
+				else 
+				{
+					$("#msgout").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		
+	}));
+	  /*------------------------------------------------Add MFG--------------------------------------------*/
+ $("#addMfgForm").on('submit', (function(e) {
+		e.preventDefault();
+		
+		//alert("hiii");
+		$.ajax({
+			url: "<?php echo Router::url(array('controller' => 'companyadmins','action' => 'addMfgLocation','compadmin'=>true));?>" ,
+			type: "POST",
+			data: new FormData(this), 
+			contentType: false,
+			cache: false, 
+			processData: false,
+			dataType: 'json',
+		
+			success: function(data)
+			{
+				
+				if (data.status == 200) 
+				{	
+					$("#msgout").html('<div class="alert alert-success"><strong>Success!</strong> '+data.message+'.</div>');
+					setTimeout(function() {$('#addMFGModal').modal('hide');}, 100);
+					document.getElementById("addMfgForm").reset();
+					
+					$('#mfgId').append('<option value="'+data.id+'">'+data.name+'</option>');
+				//$('<option>').val(data.id).text(data.name).appendTo($("#mfgId"));
+				  
+				}
+				else 
+				{
+					$("#msgout").html('<div class="alert alert-danger"><strong>Error!</strong> '+data.message+'.</div>');
+				}
+			}
+		});
+		
+	}));
+	 $('#msgout').fadeOut(2000, function () 
+					{
+                      $('#msgout').text('');
+					});
+			
+		 //filter city and state
+	$(".select_customer_list").on('change focus',function() {
+	
+	var id = $(this).val();	
+
+	$(".select_mfglocation").find('option').remove();
+	//$('<option>').val('').text(' Select MFG ').appendTo($(".select_mfglocation"));			
+	if (id) {
+	var dataString = 'id='+ id;
+	$.ajax({
+		type: "POST",
+		url: '<?php echo Router::url(array("controller"=>"companyadmins","action" => "getArea",'compadmin'=>true)); ?>',
+		data: dataString,
+		cache: false,
+		success: function(html) {		
+		
+			$('.select_mfglocation').append(html.data);			
+				
+			if($( ".select_mfglocation" ).hasClass( "chosen-select" ))
+			{
+				$(".select_mfglocation").trigger("chosen:updated");								
+			}			
+		} 
+	});
+	}	
+	});			
+</script>

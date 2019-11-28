@@ -1,0 +1,96 @@
+
+        <div class="breadcrumbs">
+            <div class="col-sm-4">
+                <div class="page-header float-left">
+                    <div class="page-title">
+                        <h4>Add MFG</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div class="page-header float-right">
+                    <div class="page-title">
+                        <ol class="breadcrumb text-right">
+                            <li class="active">MFG</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+				
+<div class="col-sm-12">
+   <div id="msgout">
+    <?php
+    echo $this->element('flash');
+   
+    ?>
+	</div>
+    
+	<div class="col-sm-1"></div>
+	<div class="col-sm-10 rfqForm">
+	
+    <?php echo $this->Form->create('MfgLocation', array('id'=>'addPackagingform','novalidate' => true, 'type' => 'file')); ?>
+    <div class="form-group">
+        <div class="col-sm-12">
+            <?php echo $this->Form->input('customer_id', array('type'=>'select','label' => 'Customer Name', 'options'=>$customerList,'div' => false, 'class' => 'form-control','empty'=>'selct customer', 'maxlength' => 255)); ?>
+        </div>
+    </div> 
+	<div class="col-sm-12 voffset2"></div>
+	 
+	
+  <div class="col-sm-12 voffset2"></div>
+    <div class="form-group">
+
+        <div class="col-sm-12 ">
+            <?php echo $this->Form->input('area', array('type'=>'text','label' => 'Area', 'div' => false, 'class' => 'form-control', 'maxlength' => 255)); ?>
+        </div>
+    </div>    
+        
+
+    
+      
+  
+	<div class="col-sm-12 voffset2"></div>
+  
+	 
+		
+	  
+	
+<div>
+<div class="col-sm-12 inputDivision">
+        <input type="submit" value="Add" class="btn btn-success">
+        <button type="button" onclick="window.location ='addMfg'" class="btn btn-primary">Cancel</button> 
+    </div>   
+    <?php echo $this->Form->end(); ?>    
+</div>   
+
+</div>
+</div>
+<script>
+$("#addPackagingform").validate({  
+		          
+            rules: {			
+				
+                "data[MfgLocation][area]": {
+                    required: true,                   
+                },
+				
+				
+				
+            },
+            messages: {
+			
+                "data[MfgLocation][area]": {
+                    required: "Please enter location.",
+                },
+				
+							
+            }
+        });
+    $('#msgout').fadeOut(2000, function () 
+					{
+                      $('#msgout').text('');
+					});
+			
+ 
+</script>

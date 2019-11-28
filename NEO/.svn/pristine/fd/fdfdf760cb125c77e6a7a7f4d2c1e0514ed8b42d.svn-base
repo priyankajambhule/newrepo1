@@ -1,0 +1,186 @@
+<?php
+
+App::uses('AppController', 'Controller');
+App::uses('CakeEmail', 'Network/Email');
+
+class ToolroomsController extends AppController {
+
+    /**
+     * Helpers and Components
+     * @var array
+    **/
+	
+	/*
+	 Mrunali D
+	15.10.2018
+	*/
+	 //function for admin logout
+	 
+	public $components = array('Paginator');	
+    public function toolroom_logout() {
+		
+        if ($this->Auth->user('id')) {
+            $this->loadModel('User');
+            $this->User->id = $this->Auth->user('id');
+            if ($this->User->saveField('is_logged_in', 0)) {
+                $this->Session->destroy('Auth.User');
+                $this->redirect($this->Auth->logout());
+            }
+        } else {
+            $this->redirect($this->Auth->logout());
+        }
+    }
+	
+	 /*
+	 Mrunali D
+	17.10.2018
+	*/
+	 public function toolroom_changePassword() 
+	{
+	    $this->layout = 'toolroom/inner';
+		$this->loadModel('Role');
+		$this->loadModel('User');
+		$user_id=$this->Session->read('Auth.User.id');
+
+	
+		if(!empty($this->data))
+		{
+
+		$old = $this->data['User']['old_password'];
+		$old_password = $this->Auth->password($old);
+		//print_r($old_password); old pwd encrypted
+		//exit;
+	    $check_password = $this->User->find('first',array('conditions'=>array('User.id'=>$user_id,'User.password'=>$old_password),'fields'=>array('User.password')));
+			
+
+		if(!empty($check_password))
+		{
+		
+			  $new = $this->data['User']['new_password'];			   
+			  $re_type_new = $this->data['User']['confirm_password'];
+			
+			  if(!empty($new) && !empty($re_type_new))
+			  {
+				  if($new == $re_type_new)
+				  {
+
+					  $this->request->data['User']['password']= $new;
+					  $this->User->id = $user_id;
+				 
+					  if($this->User->save($this->data))
+					  {
+
+						$password_change_successfully = __('Password changed successfully',true);
+						$this->Session->setFlash(__($password_change_successfully, true),'success');
+						$this->redirect($this->referer());
+					  }
+
+				  }
+
+			 }
+
+		 }
+		 else
+		 {
+			$sorry_your_old_password_is_incorrect = __('Sorry your old password is incorrect',true);
+			$this->Session->setFlash(__($sorry_your_old_password_is_incorrect, true),'error');
+		 }
+		}
+
+		}
+	
+/*
+  Mrunali D 
+  15.10.2018 
+  comapany admin dashboard
+*/	
+   public function toolroom_dashboard()
+   {
+	    $this->layout = 'toolroom/inner';
+	   $this->toolroom_check_login();
+	   if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{
+			
+		}
+   }
+   /*
+    Mrunali D 
+	17.10.2018
+	tool room rfq list
+   */
+   public function toolroom_rfqList()
+   {
+	    $this->layout = 'toolroom/inner';
+	   $this->toolroom_check_login();
+	   $cond=array();
+		 $this->loadModel('Rfq');
+		
+		
+		 
+		 
+		 
+		if ($this->Access->checkPermission(array(READ_PERMISSION_ID))) 
+		{	
+			
+			$conditions = array(
+			'Rfq.id !=' => BOOL_FALSE,
+			'Rfq.is_deleted' => BOOL_FALSE,
+			'Rfq.is_active' => BOOL_TRUE,
+			//'Rfq.toolroom_status'=>BOOL_FALSE,
+		);
+		
+		$conditions=array_merge($conditions,$cond);
+		
+		$this->Paginator->settings = array(
+			'Rfq' => array(
+				'conditions' => $conditions,
+				
+				'order' => array('Rfq.id' => 'DESC'),
+				'limit' => PAGINATION_LIMIT,
+				'recursive' => 2
+		));
+		$products = $this->Paginator->paginate('Rfq');
+		$this->set(compact('products'));		
+		//echo "<pre>";print_r($products);exit;
+		}
+		else
+		{
+			$this->Session->setFlash("Unauthorized access", 'error');
+            $this->redirect($this->referer());
+		}	
+   }
+    
+	/*
+	Mrunali D
+	17.10.2018
+	update order status
+	*/
+	public function toolroom_updateStatustoolroom(){
+		$this->autoRender = FALSE;
+		$this->layout = 'ajax';
+		$this->loadModel('Rfq');		
+		
+		
+		$id=$this->request->data['rfq_id'];
+		$status=$this->request->data['status'];
+		
+		if ($this->request->is('ajax')) 
+		{	
+			if($status==1){
+				//$this->Rfq->create();
+				$this->request->data['Rfq']['id']=$id;
+				$this->request->data['Rfq']['toolroom_status']=$status;
+				
+				if($this->Rfq->save($this->request->data['Rfq'])){			
+					$status=$this->request->data['Rfq']['toolroom_status'];		
+					
+					echo json_encode(array('status'=>'200','id'=>$id,'toolroom_status'=>$status));
+				}
+				else{
+					echo json_encode(array('status'=>'401'));
+				}
+			}
+		}		
+	}
+	
+}
